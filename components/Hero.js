@@ -39,13 +39,13 @@ export default function Hero() {
   return (
     <div className="mb-5 max-w-2xl">
       <h1 className="text-4xl font-bold tracking-tight text-gray-800 dark:text-zinc-100 sm:text-5xl">
-        Hi, I'm Curtis
+        Hi, I'm Saad
       </h1>
       <p className="mt-6 text-base text-gray-600 dark:text-gray-400">
-        As a Vancouver BC-based web developer, I'm currently enriching the tech team at 14 Oranges.
-        My journey to web development started at Apple, where I held a Lead position. There, I
-        orchestrated product releases, managed repair initiatives, and facilitated new store
-        inaugurations. My driving force? A dynamic team and engaging challenges that ignite my
+        As a digital nomad, I'm currently working in a tech startup at California, States.
+        My journey to software development started at a company called Tintash, where I truly learnt how you can do anything if you are a quick learner. 
+        There, I got trained into multiple domains such as Unity, Mixed Reality, Blockchain and iOS Native and played a leading role in each of them.
+        My driving force? A dynamic team and engaging challenges that ignite my
         passion every day. I'm always looking for new opportunities to learn and grow.
       </p>
       <div className="mt-6 flex gap-6">

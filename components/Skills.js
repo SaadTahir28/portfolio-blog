@@ -1,17 +1,20 @@
 /* eslint-disable prettier/prettier */
 import {
+  SiVisualstudio,
   SiReact,
-  SiHtml5,
-  SiCss3,
-  SiJavascript,
-  SiTypescript,
-  SiNextdotjs,
+  SiUnity,
+  SiCsharp,
+  SiBitcoin,
+  SiEthereum,
+  SiXcode,
   SiNodedotjs,
-  SiPostgresql,
-  SiTailwindcss,
-  SiRedux,
+  SiSwift,
   SiFirebase,
   SiGit,
+  SiIos,
+  SiBlockchaindotcom,
+  SiAndroid,
+  SiSteam
 } from 'react-icons/si'
 
 import { motion } from 'framer-motion'
@@ -20,46 +23,49 @@ import { FadeContainer, popUp } from '../lib/FramerMotionVariants'
 
 const skills = [
   {
-    name: 'TypeScript',
-    logo: SiTypescript,
+    name: 'Unity 3D',
+    logo: SiUnity,
   },
   {
-    name: 'HTML',
-    logo: SiHtml5,
+    name: 'C#',
+    logo: SiCsharp,
   },
   {
-    name: 'CSS',
-    logo: SiCss3,
+    name: 'iOS',
+    logo: SiIos,
   },
   {
-    name: 'JavaScript',
-    logo: SiJavascript,
+    name: 'Android',
+    logo: SiAndroid,
+  },
+  {
+    name: 'Steam',
+    logo: SiSteam,
+  },
+  {
+    name: 'XCode',
+    logo: SiXcode,
+  },
+  {
+    name: 'Swift',
+    logo: SiSwift,
+  },
+  {
+    name: 'Bitcoin',
+    logo: SiBitcoin,
+  },
+  {
+    name: 'Ethereum',
+    logo: SiEthereum,
   },
   {
     name: 'React',
     logo: SiReact,
   },
   {
-    name: 'Tailwind CSS',
-    logo: SiTailwindcss,
-  },
-  {
-    name: 'Nextjs',
-    logo: SiNextdotjs,
-  },
-  {
     name: 'Node.js',
     logo: SiNodedotjs,
   },
-  {
-    name: 'PostgreSQL',
-    logo: SiPostgresql,
-  },
-  {
-    name: 'Redux',
-    logo: SiRedux,
-  },
-
   {
     name: 'Firebase',
     logo: SiFirebase,
