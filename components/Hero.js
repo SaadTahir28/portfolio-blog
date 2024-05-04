@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { IoLogoGithub, IoLogoLinkedin, IoMail, IoCall } from 'react-icons/io5'
 import Notification from './Notification'
+import siteMetadata from '@/data/siteMetadata'
 
 function SocialLink({ icon: Icon, ...props }) {
   return (
@@ -49,22 +50,22 @@ export default function Hero() {
       </p>
       <div className="mt-6 flex gap-6">
         <SocialLink
-          href="https://github.com/Cwarcup"
+          href={siteMetadata.github}
           aria-label="Check out my Github"
           icon={IoLogoGithub}
         />
         <SocialLink
-          href="https://www.linkedin.com/in/curtiswarcup/"
+          href={siteMetadata.linkedin}
           aria-label="Connect with me on LinkedIn"
           icon={IoLogoLinkedin}
         />
         <CopyToClipboard
-          text={{ contact: 'curtis.gwarcup@gmail.com', type: 'Email' }}
+          text={{ contact: siteMetadata.email, type: 'Email' }}
           aria-label="Send me an email"
           icon={IoMail}
         />
         <CopyToClipboard
-          text={{ contact: '+1 (604) 374-4652', type: 'Phone number' }}
+          text={{ contact: siteMetadata.phone, type: 'Phone number' }}
           aria-label="Give me a call"
           icon={IoCall}
         />

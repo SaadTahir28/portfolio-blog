@@ -1,28 +1,29 @@
 const siteMetadata = {
-  title: 'cwarcup - Curtis Warcup',
-  author: 'Curtis Warcup',
-  headerTitle: 'Curtis Warcup - Web Developer',
+  title: 'saadtahir - Saad Tahir',
+  author: 'Saad Tahir',
+  headerTitle: 'Saad Tahir - Game Developer',
   description:
-    'Personal blog and web development notes created by Curtis Warcup. Also contains projects and personal interests.',
+    'Personal blog and game development notes created by Saad Tahir. Also contains projects and personal interests.',
   language: 'en-us',
   theme: 'dark', // system, dark or light
-  siteUrl: 'https://cwarcup.com',
-  siteRepo: 'https://github.com/Cwarcup/personal-blog',
+  siteUrl: 'https://velocitystudios.eu/',
+  siteRepo: 'https://github.com/SaadTahir28/portfolio-blog',
   siteLogo: '/static/images/logo.png',
   image: '/static/images/avatar.jpg',
   socialBanner: '/static/images/twitter-card.png',
-  email: 'curtis.gwarcup@gmail.com',
-  github: 'https://github.com/Cwarcup',
-  twitter: 'https://twitter.com/curtiswarcup',
-  facebook: 'https://www.facebook.com/curtis.wwwwww',
-  youtube: 'https://youtube.com',
-  linkedin: 'https://www.linkedin.com/in/curtiswarcup/',
+  email: 'saadtahir28@gmail.com',
+  phone: '+923214441208',
+  github: 'https://github.com/SaadTahir28',
+  facebook: 'https://www.facebook.com/saad.tahir.9480/',
+  youtube: 'https://www.youtube.com/channel/UCtEETI0SVhbrDHHV_Jo8EgA',
+  instagram: 'https://www.instagram.com/saadtahir6929/',
+  linkedin: 'https://www.linkedin.com/in/saad-tahir-b18211145/',
   locale: 'en-US',
   analytics: {
     // If you want to use an analytics provider you have to add it to the
     // content security policy in the `next.config.js` file.
     // supports plausible, simpleAnalytics, umami or googleAnalytics
-    plausibleDataDomain: 'https://cwarcup.com/', // e.g. tailwind-nextjs-starter-blog.vercel.app
+    plausibleDataDomain: 'https://velocitystudios.eu/', // e.g. tailwind-nextjs-starter-blog.vercel.app
     simpleAnalytics: false, // true or false
     umamiWebsiteId: '', // e.g. 123e4567-e89b-12d3-a456-426614174000
     googleAnalyticsId: process.env.NEXT_PUBLIC_GOOGLE_ANALYTIC_ID, // e.g. UA-000000-2 or G-XXXXXXX
