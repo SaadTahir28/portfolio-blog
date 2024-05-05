@@ -36,6 +36,7 @@ const ProjectCard = ({ title, description, imgSrc, href, tools, deployed }) => (
       </div>
 
       <div className="mt-auto flex w-fit items-center gap-4 p-2">
+        {href && (
         <Link href={href}>
           <a
             title="Source Code on GitHub"
@@ -47,6 +48,7 @@ const ProjectCard = ({ title, description, imgSrc, href, tools, deployed }) => (
             <BsGithub className="h-6 w-6 transition-all hover:scale-110 active:scale-90" />
           </a>
         </Link>
+        )}
 
         {deployed && (
           <Link href={deployed}>

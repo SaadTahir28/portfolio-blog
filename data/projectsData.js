@@ -1,12 +1,11 @@
 const projectsData = [
   {
-    title: 'Netflix Clone',
+    title: 'Super Jump - Flip Jump Master',
     description:
-      'This project is a Netflix clone that was built using cutting-edge technologies such as TypeScript, Next.js, React, Hasura, Supabase, GraphQL, Magic, and more.',
-    imgSrc: '/static/images/projectCards/netflix-clone.png',
-    href: 'https://github.com/Cwarcup/netflix-clone',
-    deployed: 'https://netflixclonedemo.vercel.app/login',
-    tools: ['TypeScript', 'Next.js', 'GraphQL', 'Supabase', 'Magic', 'Hasura'],
+      'Get ready for a super adventure in Super Jump Star, the thrilling trampoline jumping game that will test your skills and push you to new heights!',
+    imgSrc: '/static/images/projectCards/super_jump.png',
+    deployed: 'https://play.google.com/store/apps/details?id=com.mlabs.superjumpstar',
+    tools: ['C#', 'Unity', 'UI/UX', 'Game Design', 'iOS', 'Android'],
   },
   {
     title: 'Coffee Shops - Discover and Favourite Coffee Shops near you!',
