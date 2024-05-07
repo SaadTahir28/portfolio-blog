@@ -43,7 +43,7 @@ export default function Hero() {
       </h1>
       <p className="mt-6 text-base text-gray-600 dark:text-gray-400">
         As a digital nomad, I'm currently working in a tech startup at California, States.
-        My journey to software development started at a company called Tintash, where I truly learnt how you can do anything if you are a quick learner. 
+        My journey to software development started at a local company, where I truly learnt how you can do anything if you are a quick learner. 
         There, I got trained into multiple domains such as Unity, Mixed Reality, Blockchain and iOS Native and played a leading role in each of them.
         My driving force? A dynamic team and engaging challenges that ignite my
         passion every day. I'm always looking for new opportunities to learn and grow.
