@@ -72,6 +72,13 @@ const projectsData = [
     youtube: 'https://www.youtube.com/shorts/MNmSq1PZmNA',
     tools: ['iOS', 'Swift', 'AR', 'Mobile', 'UI/UX', 'App Store'],
   },
+  {
+    title: 'Bed Bath and Beyond | iOS | AR',
+    description: 'An online store that not only allows users to buy Bed Bath products but also experience them in Augmented Reality and in 3D. The unique feature that I worked on was placing curtain items in AR. The users detect the windowpane where they want to place the curtain on. They can also view the curtain animate in open and closed states.',
+    imgSrc: '/static/images/projectCards/bbb.png',
+    deployed: 'https://www.youtube.com/shorts/MNmSq1PZmNA',
+    tools: ['iOS', 'Swift', 'AR', 'Mobile', 'UI/UX', 'App Store'],
+  },
 ]
 
 export default projectsData
