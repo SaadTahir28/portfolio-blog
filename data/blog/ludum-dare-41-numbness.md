@@ -26,7 +26,7 @@ Yes I did compete in Ludum Dare 41. Why wouldn’t I? I really like to come up w
 
 I combined **Platformer + FPS**. Platformer games like Mario where a 2D character moves left/right, can jump and an action button. FPS game is first person shooting where you can see the player’s hands and the camera is on the head.
 
-Ok so how do I combine it? Well, I will map the action button to the mouse. You will control the character with **AD** keys from the keyboard. It can jump with **SPACEBAR**. And you will use the mouse for actions like shooting with a gun. The mouse movement will move the crosshair in the game and you can aim for the things in the environment. **LMB** on the mouse will shoot.
+Ok so how do I combine it? Well, I will map the action button to the mouse. You will control the character with **AD** keys from the keyboard. It can jump with **SPACEBAR**. And you will use the mouse for actions like shooting with a gun. The mouse movement will move the crosshair in the game and you can aim for the things in the environment. **LMB** on the mouse will shoot. You can see the brainstorming that happened for the game.
 
 [Here](https://docs.google.com/document/d/16D9Co-OY5_3aRj14urIs9UrAALge0xsu/edit?usp=sharing&ouid=107180224131090961968&rtpof=true&sd=true) you can see the brainstorming that happened for the game.
 
@@ -42,7 +42,7 @@ A princess with a purple frock, pinkish skin and spikey hair. She gets stuck in 
 
 Here's what I finally wrote. You have to save the princess and get her out of the dungeon. Her arms get numb after drinking the potion of life. She quench her thirst after drinking it but the outcome was horrifying. She lost the feelings of her arms. Now she asks for your protection from the creepy monsters of the dungeons and puzzles to solve and get her out of the darkness.
 
-![stroy](/static/images/blog/numbness_note_desc.png)
+![numbness_gameplay](/static/images/blog/numbness_gameplay.png)
 
 # The Art & Animation
 
@@ -50,15 +50,13 @@ I don’t know how to use photoshop and can use only Microsoft Paint. I needed s
 
 To create the gun effect, I employed two sprites that seamlessly switched between each other, generating an animation. One sprite depicted the gun in idle mode, while the other showed it firing. Whenever the player clicked, the sprites alternated, giving the impression of animation. It's a handy little trick!
 
-![art](/static/images/blog/numbness_art.png)
-
-![princess_art](/static/images/blog/numbness_princess.png)
+![numbness_art](/static/images/blog/numbness_art.png)
 
 # The Soundtrack
 
 I used Bosca Ceoil, a tool made by a member in the community to create 8 bit songs. The soundtrack needs to be horror and emotional. At that time, I was watching Dragon Ball Super. There is a Vegeta God transformation when he fights Toppo and remembers his family and friends, he gets angry and a soundtrack comes up. I placed the notes and gave my touch. Came up with the following soundtrack.
 
-[![numbness_soundtrack](/static/images/blog/numbness_sound.png)](https://www.youtube.com/watch?v=0Ii-1268-L0)
+[![numbness_sound](/static/images/blog/numbness_sound.png)](https://www.youtube.com/watch?v=0Ii-1268-L0)
 
 Cool huh? It becomes horror when you slow it down.
 
@@ -68,13 +66,13 @@ When choosing a title for the game, I aimed for something that marked a pivotal 
 
 Have you guessed the meaning of Numbness? If not then you have to play the game. You will get it in the first 2 mins of the gameplay.
 
-![Cover](/static/images/blog/numbness_cover.png)
+![numbness_cover](/static/images/blog/numbness_cover.png)
 
 # Did I win?
 
 After a week of playing and reviewing each other's games aka *Karma Points*, the results were announced. Out of over **3000** entries, my game **Numbness** achieved the following positions:
 
-![results](/static/images/blog/numbness_results.png)
+![numbness_results](/static/images/blog/numbness_results.png)
 
 # The Happiness
 
@@ -87,6 +85,8 @@ My take after making this game is that it helped me gain confidence in my abilit
 # The Conclusion
 
 I hope you enjoyed the story if you read it. I will keep on posting blogs in future as I am picking up this habit and I have a lot to share with you guys.
+
+![numbness_princess](/static/images/blog/numbness_princess.png)
 
 # The Game
 
