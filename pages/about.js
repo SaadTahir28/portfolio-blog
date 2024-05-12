@@ -4,7 +4,7 @@ import siteMetadata from '@/data/siteMetadata'
 import Link from '@/components/Link'
 import { Analytics } from '@vercel/analytics/react'
 import { GitHubIcon, LinkedInIcon, MailIcon } from '@/components/social-icons'
-import portraitImage from '../public/static/images/avatar.jpg'
+import portraitImage from '../public/static/images/avatar.png'
 
 function SocialLink({ className, href, children, icon: Icon }) {
   return (
@@ -25,7 +25,6 @@ export default function About() {
   return (
     <>
       <Head>
-        <title>{`About - ${author}`}</title>
         <meta
           name="description"
           content="Hi, I'm Saad Tahir. I'm a software engineer and a lifelong learner. I'm passionate about building great software and sharing what I learn along the way."

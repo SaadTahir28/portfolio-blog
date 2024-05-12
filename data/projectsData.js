@@ -10,6 +10,23 @@ const projectsData = [
     tools: ['C#', 'Unity', '3D', 'Hyper Casual', 'UI/UX', 'Android', 'iOS'],
   },
   {
+    title: 'NeuroSync Health | AR/VR',
+    description:
+      "An AR/VR solution for detecting concussions and injuries. Utilizes eye tracking sensors from the headsets to track the eyes and perform different assessments.",
+    imgSrc: '/static/images/projectCards/neurosync.jpg',
+    youtube: 'https://vimeo.com/804085818',
+    deployed: 'https://www.neurosync.health/product/',
+    tools: ['C#', 'Unity', 'AR', 'VR', 'Pico Neo 2', 'Pico Neo 3', 'Magic Leap 2', 'Hololens 2', 'Apple Vision OS', 'Health', 'Android', 'Pico Store'],
+  },
+  {
+    title: 'ALEX Go | Blockchain',
+    description: 'ALEX is a DeFi protocol built for Bitcoin and BRC-20 tokens. It is built via Stacks Blockchain and its smart contract language Clarity.',
+    imgSrc: '/static/images/projectCards/alexgo.jpg',
+    href: 'https://github.com/alexgo-io',
+    deployed: 'https://alexgo.io/',
+    tools: ['Blockchain', 'Stacks', 'Ethereum', 'Bitcoin', 'ReactJS', 'Clarity Language', 'Solidity', 'Smart Contract', 'Unit Tests', 'Integration Tests', 'Maths']
+  },
+  {
     title: 'Gamerize | Unity',
     description:
       'An English vocabulary app [Gamerize Dictionary] where you can acquire all four language skills: listening, reading, speaking, and writing. it allows learning from simple children\'s English to the level of Eiken Grade 2. I worked on UI/UX design, Unity Game Development, Text-to-Speech and Speech to text recognition.',
@@ -26,23 +43,6 @@ const projectsData = [
     youtube: 'https://youtu.be/y4o7OqyDloM',
     deployed: 'https://play.google.com/store/apps/details?id=com.velocityengine7.FillHoleDanceofPlanets',
     tools: ['C#', 'Unity', '3D', 'Hyper Casual', 'Game Design', 'Sound Design', 'UI/UX', 'Android'],
-  },
-  {
-    title: 'NeuroSync Health | AR/VR',
-    description:
-      "An AR/VR solution for detecting concussions and injuries. Utilizes eye tracking sensors from the headsets to track the eyes and perform different assessments.",
-    imgSrc: '/static/images/projectCards/neurosync.jpg',
-    youtube: 'https://vimeo.com/804085818',
-    deployed: 'https://www.neurosync.health/product/',
-    tools: ['C#', 'Unity', 'AR', 'VR', 'Pico Neo 2', 'Pico Neo 3', 'Magic Leap 2', 'Hololens 2', 'Apple Vision OS', 'Health', 'Android', 'Pico Store'],
-  },
-  {
-    title: 'ALEX Go | Blockchain',
-    description: 'ALEX is a DeFi protocol built for Bitcoin and BRC-20 tokens. It is built via Stacks Blockchain and its smart contract language Clarity.',
-    imgSrc: '/static/images/projectCards/alexgo.jpg',
-    href: 'https://github.com/alexgo-io',
-    deployed: 'https://alexgo.io/',
-    tools: ['Blockchain', 'Stacks', 'Ethereum', 'Bitcoin', 'ReactJS', 'Clarity Language', 'Solidity', 'Smart Contract', 'Unit Tests', 'Integration Tests', 'Maths']
   },
   {
     title: 'Stack Jump | Unity',
