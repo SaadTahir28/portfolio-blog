@@ -4,9 +4,9 @@ date: '2024-05-11'
 tags: ['Game Jam','Unity','Art','Sound Design','Story','Game Design']
 draft: false
 summary: This game is an entry in Ludum Dare 41 an online game jam where you have to make a game in 3 days on a selected theme.
-images: []
+images: [/static/images/blog/numbness_princess.png]
 layout: PostLayout
-canonicalUrl:
+canonicalUrl: https://velocityengine7.itch.io/numbness
 authors: ['default']
 ---
 

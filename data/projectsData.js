@@ -10,13 +10,13 @@ const projectsData = [
     tools: ['C#', 'Unity', '3D', 'Hyper Casual', 'UI/UX', 'Android', 'iOS'],
   },
   {
-    title: 'NeuroSync Health | AR/VR',
+    title: 'NeuroSync Health | AR | VR | XR',
     description:
       "An AR/VR solution for detecting concussions and injuries. Utilizes eye tracking sensors from the headsets to track the eyes and perform different assessments.",
     imgSrc: '/static/images/projectCards/neurosync.jpg',
     youtube: 'https://vimeo.com/804085818',
     deployed: 'https://www.neurosync.health/product/',
-    tools: ['C#', 'Unity', 'AR', 'VR', 'Pico Neo 2', 'Pico Neo 3', 'Magic Leap 2', 'Hololens 2', 'Apple Vision OS', 'Health', 'Android', 'Pico Store'],
+    tools: ['C#', 'Unity', 'AR', 'VR', 'Pico Neo 2', 'Pico Neo 3', 'Magic Leap 2', 'Hololens 2', 'Meta Quest', 'Apple Vision OS', 'Health', 'Android', 'Pico Store'],
   },
   {
     title: 'ALEX Go | Blockchain',
@@ -74,10 +74,17 @@ const projectsData = [
   },
   {
     title: 'Bed Bath and Beyond | iOS | AR',
-    description: 'An online store that not only allows users to buy Bed Bath products but also experience them in Augmented Reality and in 3D. The unique feature that I worked on was placing curtain items in AR. The users detect the windowpane where they want to place the curtain on. They can also view the curtain animate in open and closed states.',
+    description: 'An online store that not only allows users to buy Bed Bath products but also experience them in Augmented Reality and in 3D. The unique feature that I worked on was placing curtain items in AR. The users detect the windowpane where they want to place the curtain on. They can also view the curtain animate in open and closed states. I contributed in this study.',
     imgSrc: '/static/images/projectCards/bbb.png',
-    deployed: 'https://www.youtube.com/shorts/MNmSq1PZmNA',
+    deployed: 'https://tintash.com/portfolio/fortune500-AR-transformation/',
     tools: ['iOS', 'Swift', 'AR', 'Mobile', 'UI/UX', 'App Store'],
+  },
+  {
+    title: 'Meta Spark | AR',
+    description: 'I have created multiple AR real world filters using Meta Spark AR. You place a trophy in the middle and scan the surface, then an animation around the trophy appears.',
+    imgSrc: '/static/images/projectCards/metaspark.png',
+    youtube: 'https://www.youtube.com/shorts/TDLvasGzr3o',
+    tools: ['Meta Spark', 'AR', 'Android', 'iOS', 'Instagram', 'Facebook', 'TikTok'],
   },
 ]
 

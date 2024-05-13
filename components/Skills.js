@@ -1,20 +1,18 @@
 /* eslint-disable prettier/prettier */
 import {
-  SiVisualstudio,
-  SiReact,
   SiUnity,
   SiCsharp,
   SiBitcoin,
   SiEthereum,
   SiXcode,
-  SiNodedotjs,
   SiSwift,
-  SiFirebase,
   SiGit,
   SiIos,
-  SiBlockchaindotcom,
   SiAndroid,
-  SiSteam
+  SiSteam,
+  SiInstagram,
+  SiWebgl,
+  SiReact
 } from 'react-icons/si'
 
 import { motion } from 'framer-motion'
@@ -31,16 +29,24 @@ const skills = [
     logo: SiCsharp,
   },
   {
-    name: 'iOS',
-    logo: SiIos,
-  },
-  {
     name: 'Android',
     logo: SiAndroid,
   },
   {
     name: 'Steam',
     logo: SiSteam,
+  },
+  {
+    name: 'WebGL',
+    logo: SiWebgl,
+  },
+  {
+    name: 'Meta Spark AR',
+    logo: SiInstagram,
+  },
+  {
+    name: 'iOS',
+    logo: SiIos,
   },
   {
     name: 'XCode',
@@ -61,19 +67,7 @@ const skills = [
   {
     name: 'React',
     logo: SiReact,
-  },
-  {
-    name: 'Node.js',
-    logo: SiNodedotjs,
-  },
-  {
-    name: 'Firebase',
-    logo: SiFirebase,
-  },
-  {
-    name: 'Git',
-    logo: SiGit,
-  },
+  }
 ]
 
 const Skills = () => {
