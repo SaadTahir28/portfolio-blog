@@ -37,11 +37,12 @@ export default function About() {
             </h1>
             <div className="mt-6 space-y-7 text-base text-zinc-600 dark:text-zinc-400">
               <p>
-                As a digital nomad, I'm currently working in a tech startup at California, States.
-                My journey to software development started at a local company, where I truly learnt how you can do anything if you are a quick learner. 
-                There, I got trained into multiple domains such as Unity, Mixed Reality, Blockchain and iOS Native and played a leading role in each of them.
-                My driving force? A dynamic team and engaging challenges that ignite my
-                passion every day. I'm always looking for new opportunities to learn and grow.
+              A software engineer by trade, I'm all about diving into the latest tech and crafting creative solutions to tricky problems. 
+              My expertise spans diverse domains, including Unity, Blockchain, iOS Native, and React, where I've honed my skills to deliver cutting-edge solutions. 
+              I love playing games and finding creative inspiration in virtual worlds. 
+              Whether it's unraveling a complex challenge or discussing the latest game mechanics, I'm always up for it. 
+              And as a digital nomad, I've got the freedom to work from anywhere, which is pretty awesome. 
+              So come along and explore the world of digital innovation with me, where creativity thrives.
               </p>
             </div>
             <div className="mt-6 mb-6 lg:pr-20">
