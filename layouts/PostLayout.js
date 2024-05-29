@@ -182,7 +182,7 @@ function TocComponent({ toc }) {
   useEffect(() => {
     let etoc = toc.map((e) => ({ ...e, children: [] }))
     for (let i = etoc.length - 1; i >= 0; i--) {
-      if (etoc[i].depth == 1) continue
+      if (etoc[i].depth == 2) continue
       for (let j = i; j >= 0; j--) {
         if (etoc[i].depth - etoc[j].depth == 1) {
           etoc[j].children.unshift(etoc[i])
@@ -190,7 +190,7 @@ function TocComponent({ toc }) {
         }
       }
     }
-    setTOC(etoc.filter((e) => e.depth == 1))
+    setTOC(etoc.filter((e) => e.depth == 2))
   }, [toc])
 
   let RenderToc = ({ item, activeId }) => {
