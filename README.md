@@ -1,16 +1,10 @@
-# cwarcup.com by Curtis Warcup
+# saadtahir.com by Saad Tahir
 
-This repository is the home to my personal [website](https://www.cwarcup.com/). This website is intended for personal use, and functions as a method of storing/organizing notes and projects.
+This repository is the home to my personal [website](https://www.saadtahir.com/). This website is intended for personal use, and functions as a method of storing/organizing notes and projects.
 
 The site is forked from the incredible [Tailwind-Nextjs-Starter-Blog](https://github.com/timlrx/tailwind-nextjs-starter-blog) by [Tim Lrx](https://github.com/timlrx).
 
 Check out the starter documentation or fork this project and start building your own blog!
-
-## Motivation
-
-I was originally using a large repository to store my notes, however, I found that I was not able to find the notes I was looking for. There were just too many notes to keep track of, and I was not able to notes quickly. I stumbled upon the [Tailwind-Nextjs-Starter-Blog](https://github.com/timlrx/tailwind-nextjs-starter-blog) but was hesitant because as a beginner I was not sure how to use Next.js or Tailwind CSS.
-
-[Tim Lrx](https://github.com/timlrx) provided a great starting point with awesome documentation. This gave me the foundations to explore and build on top of the starter blog.
 
 ## Features
 
@@ -93,11 +87,6 @@ Follow the interactive prompt to generate a post with pre-filled front matter.
 
 **Vercel**  
 The easiest way to deploy the template is to use the [Vercel Platform](https://vercel.com) from the creators of Next.js. Check out the [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
-
-**Netlify / GitHub Pages / Firebase etc.**  
-As the template uses `next/image` for image optimization, additional configurations have to be made to deploy on other popular static hosting websites like [Netlify](https://www.netlify.com/) or [GitHub Pages](https://pages.github.com/). An alternative image optimization provider such as Imgix, Cloudinary or Akamai has to be used. Alternatively, replace the `next/image` component with a standard `<img>` tag. See [`next/image` documentation](https://nextjs.org/docs/basic-features/image-optimization) for more details.
-
-The API routes used in the newsletter component cannot be used in a static site export. You will need to use a form API endpoint provider and substitute the route in the newsletter component accordingly. Other hosting platforms such as Netlify also offer alternative solutions - please refer to their docs for more information.
 
 ## Licence
 
