@@ -3,7 +3,7 @@ import Head from 'next/head'
 import siteMetadata from '@/data/siteMetadata'
 import Link from '@/components/Link'
 import { Analytics } from '@vercel/analytics/react'
-import { GitHubIcon, LinkedInIcon, MailIcon } from '@/components/social-icons'
+import { GitHubIcon, LinkedInIcon, MailIcon, UpworkIcon } from '@/components/social-icons'
 import portraitImage from '../public/static/images/avatar.png'
 
 function SocialLink({ className, href, children, icon: Icon }) {
@@ -52,6 +52,9 @@ export default function About() {
                   </SocialLink>
                   <SocialLink href={linkedin} icon={LinkedInIcon} className="mt-4">
                       Follow on LinkedIn
+                  </SocialLink>
+                  <SocialLink href={upwork} icon={UpworkIcon} className="mt-4">
+                      Hire on Upwork
                   </SocialLink>
                   <SocialLink
                       href={`mailto:${email}`}
