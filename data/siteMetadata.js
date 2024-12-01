@@ -17,6 +17,7 @@ const siteMetadata = {
   youtube: 'https://www.youtube.com/channel/UCtEETI0SVhbrDHHV_Jo8EgA',
   instagram: 'https://www.instagram.com/saadtahir6929/',
   linkedin: 'https://www.linkedin.com/in/saad-tahir-b18211145/',
+  upwork: 'https://www.upwork.com/freelancers/~01220215003a62baba?mp_source=share',
   locale: 'en-US',
   analytics: {
     // If you want to use an analytics provider you have to add it to the
