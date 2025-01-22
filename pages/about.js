@@ -3,7 +3,7 @@ import Head from 'next/head'
 import siteMetadata from '@/data/siteMetadata'
 import Link from '@/components/Link'
 import { Analytics } from '@vercel/analytics/react'
-import { GitHubIcon, LinkedInIcon, MailIcon, UpworkIcon } from '@/components/social-icons'
+import { GitHubIcon, LinkedInIcon, MailIcon, UpworkIcon, InstagramIcon } from '@/components/social-icons'
 import portraitImage from '../public/static/images/avatar.png'
 
 function SocialLink({ className, href, children, icon: Icon }) {
