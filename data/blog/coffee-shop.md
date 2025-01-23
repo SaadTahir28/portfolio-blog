@@ -14,6 +14,7 @@ I recently learned making 3D models in Blender so I thought I would share what I
 I followed the tutorial from [PolygonRunway](https://www.youtube.com/watch?v=0TzjpR3pdpk&ab_channel=PolygonRunway) to create this model.
 
 ![coffeeshop](/static/images/blog/coffeeshop.png)
+
 <br/>
 
 # Important Keys
