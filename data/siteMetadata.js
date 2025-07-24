@@ -9,7 +9,7 @@ const siteMetadata = {
   siteUrl: 'https://www.saadtahir.com/',
   siteRepo: 'https://github.com/SaadTahir28/portfolio-blog',
   siteLogo: '/static/images/logo.png',
-  image: '/static/images/avatar.png',
+  image: '/static/images/vr-photo.png',
   email: 'saadtahir28@gmail.com',
   phone: '+923214441208',
   github: 'https://github.com/SaadTahir28',
