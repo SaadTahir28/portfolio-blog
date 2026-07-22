@@ -29,6 +29,7 @@ const RecentProjects = ({ MAX_PROJECTS }) => {
                 tools={d.tools}
                 deployed={d.deployed}
                 youtube={d.youtube}
+                play={d.play}
               />
             ))}
           </AnimatedDiv>

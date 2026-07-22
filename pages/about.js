@@ -9,12 +9,8 @@ import portraitImage from '../public/static/images/vr-photo.png'
 function SocialLink({ className, href, children, icon: Icon }) {
   return (
     <li className="flex">
-      <Link
-        href={href}
-        className="group flex text-sm font-medium text-zinc-800 transition hover:text-primary-500 dark:text-zinc-200 dark:hover:text-primary-500"
-      >
-        <Icon className="h-6 w-6 flex-none fill-zinc-500 transition group-hover:fill-primary-500" />
-        <span className="ml-4">{children}</span>
+      <Link href={href} aria-label={children} title={children} className="group flex">
+        <Icon className="h-7 w-7 flex-none fill-zinc-500 transition group-hover:fill-primary-500" />
       </Link>
     </li>
   )
@@ -45,33 +41,29 @@ export default function About() {
               So come along and explore the world of digital innovation with me, where creativity thrives.
               </p>
             </div>
-            <div className="mt-6 mb-6 lg:pr-20">
-              <ul role="list">
-                  <SocialLink href={github} icon={GitHubIcon} className="mt-4">
+            <div className="mt-6 mb-6">
+              <ul role="list" className="flex items-center space-x-5">
+                  <SocialLink href={github} icon={GitHubIcon}>
                       Follow on GitHub
                   </SocialLink>
-                  <SocialLink href={linkedin} icon={LinkedInIcon} className="mt-4">
+                  <SocialLink href={linkedin} icon={LinkedInIcon}>
                       Follow on LinkedIn
                   </SocialLink>
-                  <SocialLink href={upwork} icon={UpworkIcon} className="mt-4">
+                  <SocialLink href={upwork} icon={UpworkIcon}>
                       Hire on Upwork
                   </SocialLink>
-                  <SocialLink
-                      href={`mailto:${email}`}
-                      icon={MailIcon}
-                      className="mt-8 border-t border-zinc-100 pt-8 dark:border-zinc-700/40"
-                  >
-                      {siteMetadata.email}
+                  <SocialLink href={`mailto:${email}`} icon={MailIcon}>
+                      Email Saad
                   </SocialLink>
               </ul>
             </div>
           </div>
-          <div className="lg:pl-40 flex justify-center items-center">
-          <div className="w-64 h-64 lg:w-64 lg:h-64">
+          <div className="flex items-center justify-center pb-10 lg:justify-end lg:pb-0 lg:pl-8">
+          <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg">
             <Image
                 src={portraitImage}
                 alt="portrait of Saad Tahir"
-                className="w-full h-full rounded-full bg-zinc-100 dark:bg-zinc-800 object-cover"
+                className="h-auto w-full rounded-2xl bg-zinc-100 object-contain dark:bg-zinc-800"
                 />
           </div>
         </div>
