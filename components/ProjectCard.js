@@ -3,8 +3,9 @@ import Link from './Link'
 import { BsGithub } from 'react-icons/bs'
 import { MdOutlineLink } from 'react-icons/md'
 import { ImYoutube } from "react-icons/im";
+import { IoGameController } from "react-icons/io5";
 
-const ProjectCard = ({ title, description, imgSrc, href, tools, deployed, youtube }) => (
+const ProjectCard = ({ title, description, imgSrc, href, tools, deployed, youtube, play }) => (
   <div className="card">
     <div className="relative -mt-[35%] w-full shrink-0 overflow-hidden rounded-xl shadow-2xl before:absolute before:inset-0 before:z-10 before:bg-black/20 sm:-mt-0 sm:w-1/2 md:-ml-[35%] md:w-8/12">
       <Image
@@ -37,6 +38,20 @@ const ProjectCard = ({ title, description, imgSrc, href, tools, deployed, youtub
       </div>
 
       <div className="mt-auto flex w-fit items-center gap-4 p-2">
+        {play && (
+          <Link href={play}>
+            <a
+              title="Play Prototype"
+              target="_blank"
+              rel="noopener noreferrer"
+              href={play}
+              className="text-gray-500 hover:text-white"
+            >
+              <IoGameController className="h-6 w-6 transition-all hover:scale-110 active:scale-90" />
+            </a>
+          </Link>
+        )}
+
         {href && (
         <Link href={href}>
           <a

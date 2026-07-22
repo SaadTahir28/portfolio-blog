@@ -2,6 +2,14 @@ import { description, title, youtube } from "./siteMetadata"
 
 const projectsData = [
   {
+    title: 'Gravity Color Switch | Playable Prototype',
+    description:
+      'A playable browser prototype built with pure HTML5 Canvas and JavaScript. You climb endlessly, and your color matches the wall you are stuck to. Tap to flip sideways and match the color of each bar ahead. Hit the play button to run it right in your browser.',
+    imgSrc: '/static/images/projectCards/gravity-color-switch.png',
+    play: '/prototypes/gravity-color-switch.html',
+    tools: ['HTML5', 'Canvas', 'JavaScript', 'Prototype', 'Web', 'Hyper Casual'],
+  },
+  {
     title: 'Super Jump - Flip Jump Master',
     description:
       'Get ready for a super adventure in Super Jump Star, the thrilling trampoline jumping game that will test your skills and push you to new heights! I worked on Game Core Mechanics, Jump Mechanics, Level Design, UI/UX, Level Progression and Sound.',

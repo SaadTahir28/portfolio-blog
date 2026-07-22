@@ -26,6 +26,7 @@ export default function Projects() {
                 tools={d.tools}
                 deployed={d.deployed}
                 youtube={d.youtube}
+                play={d.play}
               />
             ))}
           </div>
