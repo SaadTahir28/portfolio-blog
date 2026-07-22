@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Idle Developers</title>
+<style>
+  :root{--bg:#12151c;--panel:#1a1f2a;--panel-2:#232a38;--money:#4ade80;--amber:#fbbf24;
+    --coffee:#c9834a;--purple:#a78bfa;--coral:#fb7185;--blue:#38bdf8;--text:#e6e9f0;--dim:#8b93a7;
+    --mono:ui-monospace,"SF Mono","Cascadia Mono","JetBrains Mono",Menlo,Consolas,monospace}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:#0b0d12;color:var(--text);font-family:var(--mono);
+    touch-action:manipulation;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+  #game{height:100%;display:flex;flex-direction:column;max-width:660px;margin:0 auto;
+    background:var(--bg);position:relative;overflow:hidden;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+
+  /* HUD */
+  #hud{padding:16px 22px 12px;border-bottom:2px solid #262d3c;
+    background:linear-gradient(#161a23,var(--bg));position:relative}
+  #topRow{display:flex;align-items:center;gap:16px}
+  #cashCol{flex:1;min-width:0}
+  #cashCol .label{font-size:15px;letter-spacing:3px;color:var(--dim);text-transform:uppercase}
+  #money{font-size:46px;font-weight:700;color:var(--money);line-height:1.15;
+    text-shadow:0 0 26px rgba(74,222,128,.24);transition:transform .08s}
+  #money.bump{transform:scale(1.06)}
+  #sub{font-size:17px;color:var(--dim);margin-top:4px;white-space:nowrap}
+  #sub b{font-weight:700}
+  #sub #burnVal{color:var(--coral);font-weight:700}
+  #sub2{font-size:15px;color:var(--dim);margin-top:2px;white-space:nowrap}
+  #sub2 b{color:var(--money);font-weight:700}
+  .rw-ok{color:var(--money)} .rw-warn{color:var(--amber)} .rw-crit{color:var(--coral)}
+  #repBox{text-align:right;font-size:15px;color:var(--dim);line-height:1.3}
+  #repBox b{display:block;font-size:32px;color:var(--purple);font-weight:700}
+  #repBox .day{display:block;font-size:15px;color:var(--blue);font-weight:700;margin-top:6px}
+  #moraleWrap{margin-top:13px;display:flex;align-items:center;gap:12px;font-size:15px;
+    letter-spacing:2px;color:var(--dim);text-transform:uppercase;cursor:pointer}
+  #moraleWrap:active{opacity:.7}
+  #moraleTrack{flex:1;height:12px;border-radius:6px;background:#2a3244;overflow:hidden}
+  #moraleFill{height:100%;width:100%;border-radius:6px;background:var(--money);
+    transition:width .25s,background .4s}
+  #moraleVal{color:var(--text);font-weight:700;min-width:56px;text-align:right;font-size:17px}
+  #boostBanner{display:none;font-size:17px;font-weight:700;color:var(--amber);margin-top:9px;
+    letter-spacing:1px;text-align:center}
+  #boostBanner.on{display:block;animation:pulse 1s infinite alternate}
+  #brokeBanner{display:none;font-size:17px;font-weight:700;color:#fff;background:#7a1f2e;
+    border-radius:12px;padding:9px 12px;margin-top:9px;text-align:center;line-height:1.35}
+  #brokeBanner.on{display:block;animation:pulse .8s infinite alternate}
+  @keyframes pulse{from{opacity:.65}to{opacity:1}}
+
+  /* Project strip */
+  #stripWrap{display:none;border-bottom:2px solid #2a3244;background:#171c25}
+  #stripWrap.on{display:block}
+  #stripHead{display:flex;justify-content:space-between;align-items:center;
+    padding:11px 22px 0;font-size:15px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+  #stripHead b{color:var(--text)}
+  #projStrip{display:flex;gap:14px;overflow-x:auto;padding:12px 22px 15px;
+    scroll-snap-type:x mandatory;overscroll-behavior-x:contain}
+  #projStrip::-webkit-scrollbar{display:none}
+  .pcard{flex:0 0 282px;scroll-snap-align:start;background:var(--panel);
+    border:1px solid #2e3850;border-left:6px solid var(--blue);border-radius:0 16px 16px 0;
+    padding:13px 15px 12px;transition:background .3s}
+  .pcard.urgent{background:#241820;animation:pulse .7s infinite alternate}
+  .pc-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .pc-client{font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pc-timer{font-size:21px;font-weight:700;color:var(--money);flex-shrink:0}
+  .pc-timer.warn{color:var(--amber)}
+  .pc-timer.crit{color:var(--coral)}
+  .pc-name{font-size:15px;color:var(--dim);margin-top:2px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .pc-track{height:12px;border-radius:6px;background:#2a3244;overflow:hidden;margin:10px 0 8px}
+  .pc-fill{height:100%;width:0;border-radius:6px;transition:width .2s}
+  .pc-money{display:flex;gap:14px;font-size:15px;margin-bottom:9px;white-space:nowrap}
+  .pc-money .fee{color:var(--money);font-weight:700}
+  .pc-money .cost{color:var(--coral);font-weight:700}
+  .pc-money .net{color:var(--amber);font-weight:700;margin-left:auto}
+  .pc-foot{display:flex;align-items:center;gap:9px}
+  .pc-eq{flex:1;font-size:13px;color:var(--purple);font-weight:700}
+  .pc-foot button{width:44px;height:40px;border:none;border-radius:11px;background:var(--panel-2);
+    color:var(--text);font-family:var(--mono);font-size:23px;font-weight:700;cursor:pointer;flex-shrink:0}
+  .pc-foot button:active{background:#31394c}
+  .pc-count{font-size:18px;min-width:32px;text-align:center;font-weight:700}
+
+  /* Office */
+  #office{flex:1;overflow-y:auto;padding:18px 18px 12px;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:15px;
+    align-content:start;overscroll-behavior:contain}
+  .desk{background:var(--panel);border:2px solid #2a3244;border-radius:20px;padding:15px 8px 11px;
+    text-align:center;cursor:pointer;position:relative;transition:transform .07s,border-color .2s;
+    min-height:158px}
+  .desk:active{transform:scale(.93)}
+  .desk .avatar{font-size:52px;line-height:1;display:block;pointer-events:none}
+  .desk .screen{margin:9px auto 6px;width:68px;height:9px;border-radius:5px;background:#38bdf8;
+    opacity:.55;pointer-events:none;animation:typing 1.2s infinite}
+  .desk .lvl{font-size:16px;color:var(--dim);pointer-events:none}
+  .desk .wage{font-size:13px;color:var(--coral);pointer-events:none;margin-top:2px;font-weight:700}
+  .desk.working{background:#1d222f}
+  .desk.working .screen{animation-duration:.45s;opacity:.9}
+  .desk .tag{position:absolute;top:-11px;left:50%;transform:translateX(-50%);color:#12151c;
+    font-size:14px;font-weight:700;padding:3px 11px;border-radius:11px;pointer-events:none;
+    white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+  .desk.flash{animation:commit .3s}
+  .desk.crunch{animation:crunchA .3s}
+  @keyframes typing{0%,100%{transform:scaleX(.4);opacity:.35}50%{transform:scaleX(1);opacity:.75}}
+  @keyframes commit{0%{box-shadow:0 0 0 0 rgba(56,189,248,.55)}100%{box-shadow:0 0 0 22px rgba(56,189,248,0)}}
+  @keyframes crunchA{0%{box-shadow:0 0 0 0 rgba(167,139,250,.6)}100%{box-shadow:0 0 0 22px rgba(167,139,250,0)}}
+  .desk.empty{border-style:dashed;border-color:#333c50;background:transparent;display:flex;
+    align-items:center;justify-content:center;color:#4a5368;font-size:38px}
+  .float{position:absolute;pointer-events:none;z-index:50;font-weight:700;font-size:26px;
+    color:var(--money);text-shadow:0 2px 5px rgba(0,0,0,.7);animation:rise .85s ease-out forwards}
+  .float.crit{font-size:32px}
+  @keyframes rise{0%{opacity:1;transform:translateY(0) scale(1)}
+    100%{opacity:0;transform:translateY(-72px) scale(1.15)}}
+
+  /* Bottom */
+  #bottom{padding:14px 14px 20px;border-top:2px solid #262d3c;background:#161a23;display:flex;gap:10px}
+  .bar-btn{flex:1;min-width:0;border:none;border-radius:18px;padding:15px 4px;font-family:var(--mono);
+    font-size:17px;font-weight:700;cursor:pointer;position:relative;letter-spacing:.4px;
+    transition:transform .07s,box-shadow .07s,filter .2s}
+  .bar-btn small{display:block;font-size:14px;font-weight:600;opacity:.78;margin-top:4px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #hireBtn{background:linear-gradient(#fcd34d,var(--amber));color:#3b2f04;box-shadow:0 6px 0 #b98a10}
+  #hireBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #b98a10}
+  #boostBtn{background:linear-gradient(#f0b072,var(--coffee));color:#3b2408;box-shadow:0 6px 0 #8a5527}
+  #boostBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #8a5527}
+  #clientBtn{background:linear-gradient(#93cbf6,var(--blue));color:#0a3555;box-shadow:0 6px 0 #1c74ab}
+  #clientBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #1c74ab}
+  #upgBtn{background:linear-gradient(#c4b5fd,var(--purple));color:#2a1f4d;box-shadow:0 6px 0 #7c5fd1}
+  #upgBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #7c5fd1}
+  .bar-btn.locked{filter:grayscale(.85) brightness(.7)}
+  .dot{display:none;position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;
+    background:#f87171;border:3px solid #161a23}
+  .dot.on{display:block}
+
+  /* Sheet */
+  #sheetOverlay{position:absolute;inset:0;background:rgba(6,8,12,.62);opacity:0;pointer-events:none;
+    transition:opacity .2s;z-index:90}
+  #sheetOverlay.open{opacity:1;pointer-events:auto}
+  #sheet{position:absolute;left:0;right:0;bottom:0;z-index:95;background:var(--panel-2);
+    border-top:2px solid #38445c;border-radius:28px 28px 0 0;
+    padding:18px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(105%);
+    transition:transform .25s cubic-bezier(.3,1.2,.4,1);max-height:78%;overflow-y:auto;
+    overscroll-behavior:contain}
+  #sheet.open{transform:translateY(0)}
+  #sheetTitle{font-size:19px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);
+    text-align:center;margin-bottom:18px}
+  #sheet .grab{width:64px;height:6px;border-radius:3px;background:#3c465c;margin:0 auto 18px}
+  .card{background:var(--panel);border:1px solid #2e3850;border-radius:20px;padding:17px;
+    margin-bottom:14px;transition:transform .07s,filter .2s}
+  .card.tap{cursor:pointer}
+  .card.tap:active{transform:scale(.97)}
+  .card.locked{filter:grayscale(.7) brightness(.6)}
+  .upg{display:flex;align-items:center;gap:16px}
+  .upg .icon{font-size:42px;width:54px;text-align:center}
+  .upg .info{flex:1;min-width:0}
+  .name{font-size:20px;font-weight:700}
+  .desc{font-size:16px;color:var(--dim);margin-top:4px;line-height:1.4}
+  .tierline{font-size:15px;color:var(--purple);margin-top:4px;font-weight:700}
+  .price{font-size:20px;font-weight:700;color:var(--money);white-space:nowrap}
+  .rest .effects{display:flex;flex-wrap:wrap;gap:16px;margin-top:11px;font-size:16px;color:var(--dim)}
+  .rest .effects b{color:var(--money);font-weight:700}
+  .rest .effects u{color:var(--coral);text-decoration:none;font-weight:700}
+  .rest .perk{font-size:16px;color:var(--amber);font-weight:700;margin-top:9px}
+  #deadlineWarn{font-size:17px;color:var(--coral);text-align:center;margin-bottom:16px;
+    line-height:1.5;font-weight:700}
+  .sechead{font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);
+    margin:6px 2px 12px;font-weight:700}
+  .job .jhead{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+  .job .client{font-size:16px;color:var(--blue);font-weight:700}
+  .job .stats{display:flex;flex-wrap:wrap;gap:18px;margin-top:12px;font-size:17px;color:var(--dim)}
+  .job .stats b{color:var(--money);font-weight:700}
+  .job .stats i{color:var(--purple);font-style:normal;font-weight:700}
+  .job .stats u{color:var(--amber);text-decoration:none;font-weight:700}
+  .job .gate{font-size:16px;color:var(--coral);font-weight:700;margin-top:10px}
+  .job .est{font-size:15px;color:var(--dim);margin-top:8px}
+  .job .est b{color:var(--coral);font-weight:700}
+  .takes{display:flex;gap:12px;margin-top:14px}
+  .takes button{flex:1;border:none;border-radius:14px;padding:13px 6px;font-family:var(--mono);
+    font-size:16px;font-weight:700;cursor:pointer;line-height:1.35}
+  .takes button small{display:block;font-size:13px;font-weight:600;opacity:.8;margin-top:3px}
+  .takes .cash{background:linear-gradient(#7de3a5,var(--money));color:#0b3d21}
+  .takes .eq{background:linear-gradient(#c4b5fd,var(--purple));color:#2a1f4d}
+  .takes button:active{transform:translateY(2px)}
+  .takes button:disabled{filter:grayscale(.8) brightness(.6);cursor:default}
+  .tierpill{font-size:14px;padding:4px 12px;border-radius:12px;background:#2e3850;color:var(--dim);
+    font-weight:700;flex-shrink:0}
+  .fund{border-color:#4a3f6e;background:#1d1a2b}
+  .fund .price{color:var(--purple)}
+  #toast{position:absolute;left:50%;top:210px;transform:translateX(-50%);background:var(--panel-2);
+    border:2px solid #38445c;color:var(--text);padding:14px 24px;border-radius:30px;font-size:18px;
+    opacity:0;transition:opacity .25s;pointer-events:none;z-index:100;max-width:88%;text-align:center;
+    line-height:1.45}
+  #toast.show{opacity:1}
+  #quitWarn{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    background:#2b1620;border:3px solid var(--coral);border-radius:24px;padding:24px 28px;
+    text-align:center;z-index:88;font-size:19px;line-height:1.7;width:82%}
+  #quitWarn.on{display:block;animation:pulse .7s infinite alternate}
+  #quitWarn b{color:var(--coral);font-size:23px}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="hud">
+    <div id="topRow">
+      <div id="cashCol">
+        <div class="label">Company cash</div>
+        <div id="money">$0</div>
+        <div id="sub"><span id="burnVal">−$0</span>/day · <b id="runwayVal">—</b></div>
+        <div id="sub2"><span id="devCount">1 on bench</span></div>
+      </div>
+      <div id="repBox">⭐<b id="repVal">0</b>rep
+        <span class="day" id="dayVal">Day 1</span></div>
+    </div>
+    <div id="moraleWrap">
+      <span>Morale</span>
+      <div id="moraleTrack"><div id="moraleFill"></div></div>
+      <span id="moraleVal">100%</span>
+    </div>
+    <div id="boostBanner"><span id="boostText">—</span> <span id="boostTime">0</span></div>
+    <div id="brokeBanner">💀 OUT OF CASH — can't make payroll. People will start leaving.</div>
+  </div>
+
+  <div id="stripWrap">
+    <div id="stripHead"><span>Active projects</span><span><b id="slotCount">0</b>/4 slots</span></div>
+    <div id="projStrip"></div>
+  </div>
+
+  <div id="office"></div>
+
+  <div id="bottom">
+    <button class="bar-btn" id="hireBtn">HIRE<small id="hireCost">$120</small></button>
+    <button class="bar-btn" id="boostBtn">BOOST<small id="boostHint">morale</small><span class="dot" id="boostDot"></span></button>
+    <button class="bar-btn" id="clientBtn">CLIENTS<small id="clientHint">find work</small><span class="dot" id="clientDot"></span></button>
+    <button class="bar-btn" id="upgBtn">UPGRADES<small>boost team</small><span class="dot" id="upgDot"></span></button>
+  </div>
+
+  <div id="quitWarn">
+    <b>⚠ BURNOUT</b><br>Your team is about to walk out.<br>
+    Get morale above 20% in <b id="quitTime">15</b> days
+  </div>
+
+  <div id="sheetOverlay"></div>
+  <div id="sheet">
+    <div class="grab"></div>
+    <div id="sheetTitle">Upgrades</div>
+    <div id="sheetBody"></div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+<script>
+(() => {
+  // ===================== CONFIG =====================
+  const DAY_SECONDS=2.0;          // one in-game day
+  const MONTH_DAYS=30;
+  const START_CASH=1000;
+  const SALARY_PER_LEVEL=7;       // $ per dev level per day, billed continuously
+  const BENCH_RATE=0.55;          // a dev with no project still costs this share
+  const RENT_BASE=18;             // office overhead per day
+  const RENT_PER_DESK=4;          // ...plus this per developer
+  const BROKE_QUIT_DAYS=9;        // days of missed payroll before someone walks
+  const COORD_EXP=0.15;           // Brooks's law: N devs give N^(1-exp) output
+  const HIRE_BASE=120, HIRE_GROWTH=1.35, MAX_DEVS=24;
+  const TRAIN_BASE=180, TRAIN_GROWTH=1.6;
+  const KEYB_BASE=250, KEYB_GROWTH=4.2;
+  const FIBER_BASE=600, FIBER_GROWTH=4.6, FIBER_GAIN=0.30;
+  const AUTO_BASE=900, AUTO_GROWTH=4.4, AUTO_CUT=0.12;
+  const MAX_PROJECTS=4;
+  const CRUNCH_DAYS=2.2;          // a crunch click = this many dev-days of free work
+  const CRUNCH_MORALE=1.6;
+  const DRAIN_PER_DEV=0.30, RECOVER_PER_IDLE=0.16, RECOVER_FLAT=0.14; // per day
+  const MULTITASK_PENALTY=0.10;
+  const BOOST_DAYS=15, BOOST_MULT=2;
+  const REST_RECOVER=0.9, QUIT_GRACE=15, OFFER_COUNT=4;
+  const RETREAT_RELIEF=0.12;
+  const EQUITY_CASH=0.55;         // equity deals pay this share up front
+  const EQUITY_DIV=0.08;          // ...plus this share of the fee every month, forever
+  const LATE_PAY=0.5;
+
+  const AVATARS=['🧑‍💻','👨‍💻','👩‍💻','👨🏽‍💻','👩🏻‍💻','🧑🏾‍💻','👨🏻‍💻','👩🏽‍💻'];
+  const COLORS=['#38bdf8','#a78bfa','#4ade80','#fb7185','#fbbf24','#22d3ee'];
+  const PCOLORS=['#38bdf8','#fb7185','#4ade80','#fbbf24'];
+
+  const TIERS=[
+    {name:'Local',    rep:0,   pay:38, repGain:5,  work:1.0},
+    {name:'Business', rep:35,  pay:50, repGain:14, work:2.4},
+    {name:'Startup',  rep:150, pay:68, repGain:34, work:5.0},
+    {name:'Global',   rep:480, pay:94, repGain:80, work:10.0},
+  ];
+  const JOBS=[
+    [{c:'Chai Chowk',p:'WhatsApp menu'},{c:'Anarkali Threads',p:'Instagram catalog'},
+     {c:'Liberty Books',p:'Stock tracker'},{c:'Gulberg Salon',p:'Booking form'},
+     {c:'Model Town Tyres',p:'Review funnel'},{c:'Ichhra Fabrics',p:'Price list app'}],
+    [{c:'Packages Mall',p:'Loyalty app'},{c:'Ravi Logistics',p:'Fleet dashboard'},
+     {c:'DHA Fitness',p:'Member portal'},{c:'Johar Motors',p:'Inventory system'},
+     {c:'Punjab Clinics',p:'Patient records'},{c:'Shalimar Foods',p:'Order routing'}],
+    [{c:'Daraz',p:'Checkout rewrite'},{c:'Careem',p:'Driver matching'},
+     {c:'Bykea',p:'Live tracking'},{c:'Foodpanda',p:'Kitchen console'},
+     {c:'Easypaisa',p:'Fraud detection'},{c:'Zameen',p:'Search ranking'}],
+    [{c:'Stripe',p:'Payments SDK'},{c:'Spotify',p:'Recommender'},
+     {c:'Netflix',p:'Streaming edge'},{c:'OpenAI',p:'Inference layer'},
+     {c:'Tesla',p:'Fleet telemetry'},{c:'Figma',p:'Realtime canvas'}],
+  ];
+  const ROUNDS=[
+    {name:'Angel round',   icon:'👼', rep:60,   cash:2500,    mo:350,    blurb:'A Lahore angel likes your delivery record.'},
+    {name:'Seed round',    icon:'🌱', rep:200,  cash:22000,   mo:3200,   blurb:'A regional fund writes your first real cheque.'},
+    {name:'Series A',      icon:'🚀', rep:620,  cash:180000,  mo:26000,  blurb:'Institutional money. The studio becomes a company.'},
+    {name:'Series B',      icon:'🏦', rep:1600, cash:1600000, mo:240000, blurb:'You are the acquisition target now, not the buyer.'},
+  ];
+
+  // ===================== STATE =====================
+  let nextId=1, benchText='1 on bench';
+  const state={
+    cash:START_CASH, rep:0, morale:100, day:1, lastMonth:0, unpaid:0,
+    devs:[makeDev()], hires:0,
+    keyb:0, fiber:0, auto:0,
+    boostLeft:0, rest:null, boostBuys:{}, retreats:0,
+    projects:[], offers:[], quitTimer:0, sheetMode:null,
+    equities:[], roundsTaken:0, monthly:0,
+    delivered:0, totalProfit:0,
+  };
+  function makeDev(){
+    return{avatar:AVATARS[(Math.random()*AVATARS.length)|0],
+           color:COLORS[(Math.random()*COLORS.length)|0],level:1,job:null};
+  }
+
+  // ===================== DERIVED =====================
+  const boostMult =()=> state.boostLeft>0?BOOST_MULT:1;
+  const moraleMult=()=> 0.35+0.65*(state.morale/100);
+  const restMult  =()=> state.rest?state.rest.work:1;
+  const fiberMult =()=> Math.pow(1+FIBER_GAIN,state.fiber);
+  const payrollMult=()=> Math.max(0.4,Math.pow(1-AUTO_CUT,state.auto));
+  const crunchMult=()=> Math.pow(2,state.keyb);
+  const drainRate =()=> DRAIN_PER_DEV*Math.max(0.4,Math.pow(1-RETREAT_RELIEF,state.retreats));
+  const focusMult =()=> Math.max(0.55,1-MULTITASK_PENALTY*Math.max(0,state.projects.length-1));
+  const coord     =n=> n<=1?1:Math.pow(n,-COORD_EXP);
+
+  const hireCost  =()=> Math.round(HIRE_BASE*Math.pow(HIRE_GROWTH,state.hires));
+  const freeDevs  =()=> state.devs.filter(d=>d.job===null);
+  const busyDevs  =()=> state.devs.filter(d=>d.job!==null);
+  const devsOn    =id=> state.devs.filter(d=>d.job===id);
+  const teamPower =()=> state.devs.reduce((s,d)=>s+d.level,0);
+  const getProj   =id=> state.projects.find(p=>p.id===id);
+  const wage      =d=> SALARY_PER_LEVEL*d.level*payrollMult();
+  const rentPerDay=()=> RENT_BASE+RENT_PER_DESK*state.devs.length;
+  const payrollPerDay=()=> state.devs.reduce((s,d)=>s+wage(d)*(d.job!==null?1:BENCH_RATE),0);
+  const burnPerDay=()=> payrollPerDay()+rentPerDay();
+  const netBurn   =()=> burnPerDay()-state.monthly/MONTH_DAYS;
+  const runway    =()=>{const n=netBurn();return n<=0?Infinity:state.cash/n;};
+
+  // work points produced per DAY on a project
+  const rateFor=id=>{
+    const on=devsOn(id); if(!on.length) return 0;
+    const raw=on.reduce((s,d)=>s+d.level,0);
+    return raw*coord(on.length)*fiberMult()*moraleMult()*boostMult()*restMult()*focusMult();
+  };
+  // payroll burn per DAY on a project
+  const burnFor=id=> devsOn(id).reduce((s,d)=>s+wage(d),0);
+
+  function cheapestDevIndex(){
+    let i=0; for(let k=1;k<state.devs.length;k++) if(state.devs[k].level<state.devs[i].level) i=k;
+    return i;
+  }
+  const trainCost=()=> Math.round(TRAIN_BASE*Math.pow(TRAIN_GROWTH,state.devs[cheapestDevIndex()].level-1));
+  const keybCost =()=> Math.round(KEYB_BASE*Math.pow(KEYB_GROWTH,state.keyb));
+  const fiberCost=()=> Math.round(FIBER_BASE*Math.pow(FIBER_GROWTH,state.fiber));
+  const autoCost =()=> Math.round(AUTO_BASE*Math.pow(AUTO_GROWTH,state.auto));
+  const maxTier  =()=>{let t=0;TIERS.forEach((T,i)=>{if(state.rep>=T.rep)t=i;});return t;};
+
+  // ===================== DOM =====================
+  const $=id=>document.getElementById(id);
+  const gameEl=$('game'), moneyEl=$('money'), devCountEl=$('devCount');
+  const subEl=$('sub'), sub2El=$('sub2'), burnEl=$('burnVal'), runwayEl=$('runwayVal');
+  const brokeBanner=$('brokeBanner');
+  const repEl=$('repVal'), dayEl=$('dayVal');
+  const moraleFill=$('moraleFill'), moraleValEl=$('moraleVal');
+  const officeEl=$('office'), toastEl=$('toast');
+  const hireBtn=$('hireBtn'), hireCostEl=$('hireCost');
+  const boostBtn=$('boostBtn'), boostDot=$('boostDot'), boostHint=$('boostHint');
+  const clientBtn=$('clientBtn'), clientDot=$('clientDot'), clientHint=$('clientHint');
+  const upgBtn=$('upgBtn'), upgDot=$('upgDot');
+  const sheet=$('sheet'), sheetOverlay=$('sheetOverlay'), sheetBody=$('sheetBody'), sheetTitle=$('sheetTitle');
+  const boostBanner=$('boostBanner'), boostTimeEl=$('boostTime'), boostTextEl=$('boostText');
+  const stripWrap=$('stripWrap'), projStrip=$('projStrip'), slotCount=$('slotCount');
+  const quitWarn=$('quitWarn'), quitTimeEl=$('quitTime');
+
+  function fmt(n){
+    const neg=n<0; n=Math.abs(n);
+    let s;
+    if(n<1000) s='$'+(n%1===0?n:n.toFixed(0));
+    else{const u=['K','M','B','T'];let i=-1;
+      while(n>=1000&&i<u.length-1){n/=1000;i++;}
+      s='$'+n.toFixed(n<100?1:0)+u[i];}
+    return (neg?'−':'')+s;
+  }
+  const days=n=> Math.max(0,Math.ceil(n))+'d';
+
+  // ===================== OFFICE =====================
+  function renderOffice(){
+    officeEl.innerHTML='';
+    state.devs.forEach((dev,i)=>{
+      const p=dev.job!==null?getProj(dev.job):null;
+      const d=document.createElement('div');
+      d.className='desk'+(p?' working':'');
+      d.dataset.i=i;
+      d.style.borderColor=p?p.color:'';
+      d.innerHTML='<span class="avatar">'+dev.avatar+'</span>'+
+        '<div class="screen" style="background:'+(p?p.color:dev.color)+
+        ';animation-delay:'+((i*0.17)%1.2)+'s"></div>'+
+        '<div class="lvl">Lv '+dev.level+'</div>'+
+        '<div class="wage">'+fmt(wage(dev)*(p?1:BENCH_RATE))+'/day</div>'+
+        (p?'<div class="tag" style="background:'+p.color+'">'+p.client+'</div>':'');
+      officeEl.appendChild(d);
+    });
+    if(state.devs.length<MAX_DEVS){
+      const e=document.createElement('div');
+      e.className='desk empty'; e.textContent='+';
+      e.addEventListener('pointerdown',tryHire);
+      officeEl.appendChild(e);
+    }
+    const f=freeDevs().length,b=busyDevs().length;
+    benchText=b?b+' billing · '+f+' on bench':f+' on bench';
+  }
+
+  officeEl.addEventListener('pointerdown',ev=>{
+    const desk=ev.target.closest('.desk');
+    if(!desk||desk.classList.contains('empty')) return;
+    const dev=state.devs[+desk.dataset.i]; if(!dev) return;
+    const p=dev.job!==null?getProj(dev.job):null;
+
+    if(p){
+      // CRUNCH — free work, no extra payroll. Costs morale.
+      const w=dev.level*CRUNCH_DAYS*crunchMult()*fiberMult()*moraleMult()*boostMult()*focusMult();
+      p.done+=w;
+      state.morale=Math.max(0,state.morale-CRUNCH_MORALE);
+      pulse(desk,'crunch');
+      spawnFloat(ev.clientX,ev.clientY,'+'+w.toFixed(0)+'pts',p.color,'crit');
+      if(p.done>=p.work) deliver(p,true);
+      renderStrip();
+    } else if(state.projects.length){
+      // idle dev → put them on the tightest deadline
+      const target=state.projects.slice().sort((a,b)=>a.left-b.left)[0];
+      dev.job=target.id;
+      pulse(desk,'flash');
+      spawnFloat(ev.clientX,ev.clientY,'→ '+target.client,target.color);
+      renderOffice(); renderStrip();
+    } else {
+      pulse(desk,'flash');
+      toast('No work to do — sign a client first 📋');
+    }
+    updateHud();
+  });
+
+  function pulse(el,c){el.classList.remove(c);void el.offsetWidth;el.classList.add(c);}
+  function spawnFloat(x,y,text,color,cls){
+    const r=gameEl.getBoundingClientRect();
+    const f=document.createElement('div');
+    f.className='float'+(cls?' '+cls:'');
+    if(color) f.style.color=color;
+    f.textContent=text;
+    f.style.left=(x-r.left-28+(Math.random()*20-10))+'px';
+    f.style.top=(y-r.top-30)+'px';
+    gameEl.appendChild(f);
+    setTimeout(()=>f.remove(),870);
+  }
+
+  function tryHire(){
+    const c=hireCost();
+    if(state.devs.length>=MAX_DEVS){toast('Office is full!');return;}
+    if(state.cash<c){toast('Need '+fmt(c)+' to hire');return;}
+    state.cash-=c; state.hires++; state.devs.push(makeDev());
+    renderOffice(); updateHud(); toast('New developer hired! 🎉');
+  }
+  hireBtn.addEventListener('pointerdown',tryHire);
+
+  // ===================== CONTRACTS =====================
+  function makeOffer(t){
+    const T=TIERS[t],pool=JOBS[t];
+    const j=pool[(Math.random()*pool.length)|0];
+    const power=Math.max(1,teamPower());
+    const work=Math.round((10+power*5)*T.work*(0.85+Math.random()*0.4));
+    const dl=Math.ceil(work/(power*0.7)*(1.05+Math.random()*0.35));
+    const fee=Math.round(work*T.pay*(0.9+Math.random()*0.25));
+    const rp=Math.round(T.repGain*(0.8+Math.random()*0.5));
+    return{client:j.c,name:j.p,tier:t,work:work,dl:dl,fee:fee,rep:rp};
+  }
+  function refreshOffers(){
+    state.offers=[];
+    const top=maxTier();
+    for(let i=0;i<OFFER_COUNT;i++){
+      const t=Math.min(top,Math.max(0,top-((Math.random()*2)|0)));
+      state.offers.push(makeOffer(t));
+    }
+    if(top<TIERS.length-1) state.offers.push(makeOffer(top+1));
+  }
+  const freeColor=()=>{
+    const used=state.projects.map(p=>p.color);
+    return PCOLORS.find(c=>!used.includes(c))||PCOLORS[0];
+  };
+
+  function acceptJob(o,equity){
+    if(state.projects.length>=MAX_PROJECTS){toast('All 4 project slots are full');return;}
+    if(state.rep<TIERS[o.tier].rep){toast('Need '+TIERS[o.tier].rep+'⭐ for that client');return;}
+    const p={id:nextId++,client:o.client,name:o.name,tier:o.tier,work:o.work,done:0,
+             fee:o.fee,rep:o.rep,left:o.dl,total:o.dl,spent:0,equity:!!equity,color:freeColor()};
+    state.projects.push(p);
+    const i=state.offers.indexOf(o);
+    if(i>=0) state.offers[i]=makeOffer(o.tier);
+    const seed=Math.max(1,Math.ceil(freeDevs().length/(MAX_PROJECTS-state.projects.length+1)));
+    for(let k=0;k<seed;k++) assignTo(p.id);
+    renderOffice(); renderStrip(); renderSheet(); updateHud();
+    toast('📋 '+o.client+' signed · '+o.dl+' day deadline'+(equity?' · equity deal':''));
+  }
+  function assignTo(id){
+    const f=freeDevs(); if(!f.length) return false;
+    f.sort((a,b)=>b.level-a.level); f[0].job=id; return true;
+  }
+  function releaseFrom(id){
+    const on=devsOn(id); if(!on.length) return false;
+    on.sort((a,b)=>a.level-b.level); on[0].job=null; return true;
+  }
+
+  function deliver(p,onTime){
+    const gross=onTime?p.fee:Math.round(p.fee*LATE_PAY);
+    const paid=p.equity?Math.round(gross*EQUITY_CASH):gross;
+    const net=paid-p.spent;          // payroll already left the account day by day
+    state.cash+=paid;
+    state.delivered++;
+    state.totalProfit+=net;
+
+    if(onTime){
+      state.rep+=p.rep;
+      if(p.equity){
+        const div=Math.round(p.fee*EQUITY_DIV);
+        state.equities.push({client:p.client,div:div});
+        recalcMonthly();
+        toast('✅ '+p.client+' shipped · '+fmt(paid)+' in · cost '+fmt(p.spent)+
+              ' · net '+fmt(net)+' · +'+fmt(div)+'/mo equity');
+      } else {
+        toast('✅ '+p.client+' shipped · fee '+fmt(paid)+' − payroll '+fmt(p.spent)+' = '+fmt(net));
+      }
+    } else {
+      const lost=Math.ceil(p.rep*0.6);
+      state.rep=Math.max(0,state.rep-lost);
+      toast('❌ '+p.client+' late · half fee '+fmt(paid)+', but you burned '+fmt(p.spent)+
+            ' getting there · −'+lost+'⭐');
+    }
+    state.devs.forEach(d=>{if(d.job===p.id) d.job=null;});
+    state.projects=state.projects.filter(x=>x.id!==p.id);
+    renderOffice(); renderStrip(); if(state.sheetMode) renderSheet(); updateHud();
+  }
+
+  function recalcMonthly(){
+    let m=state.equities.reduce((s,e)=>s+e.div,0);
+    for(let i=0;i<state.roundsTaken;i++) m+=ROUNDS[i].mo;
+    state.monthly=m;
+  }
+
+  function renderStrip(){
+    if(!state.projects.length){stripWrap.classList.remove('on');projStrip.innerHTML='';return;}
+    stripWrap.classList.add('on');
+    slotCount.textContent=state.projects.length;
+    projStrip.innerHTML='';
+    state.projects.forEach(p=>{
+      const pct=Math.min(100,(p.done/p.work)*100);
+      const urgent=p.left<p.total*0.2;
+      const tcls=urgent?'crit':(p.left<p.total*0.4?'warn':'');
+      const projected=(p.equity?p.fee*EQUITY_CASH:p.fee)-p.spent;
+      const c=document.createElement('div');
+      c.className='pcard'+(urgent?' urgent':'');
+      c.style.borderLeftColor=p.color;
+      c.innerHTML=
+        '<div class="pc-top"><div class="pc-client" style="color:'+p.color+'">'+p.client+'</div>'+
+        '<div class="pc-timer '+tcls+'">'+days(p.left)+'</div></div>'+
+        '<div class="pc-name">'+p.name+'</div>'+
+        '<div class="pc-track"><div class="pc-fill" style="width:'+pct+'%;background:'+p.color+'"></div></div>'+
+        '<div class="pc-money"><span class="fee">'+fmt(p.fee)+'</span>'+
+        '<span class="cost">−'+fmt(p.spent)+'</span>'+
+        '<span class="net">'+fmt(projected)+'</span></div>'+
+        '<div class="pc-foot"><span class="pc-eq">'+(p.equity?'equity deal':'')+'</span>'+
+        '<button data-a="m">−</button><span class="pc-count">'+devsOn(p.id).length+'</span>'+
+        '<button data-a="p">+</button></div>';
+      c.querySelector('[data-a="p"]').addEventListener('pointerdown',e=>{
+        e.stopPropagation();
+        if(assignTo(p.id)){renderOffice();renderStrip();updateHud();}
+        else toast('Nobody on the bench — pull someone off another job');
+      });
+      c.querySelector('[data-a="m"]').addEventListener('pointerdown',e=>{
+        e.stopPropagation();
+        if(releaseFrom(p.id)){renderOffice();renderStrip();updateHud();}
+      });
+      projStrip.appendChild(c);
+    });
+  }
+
+  // ===================== BOOSTS =====================
+  const BOOSTS=[
+    {id:'coffee',icon:'☕',name:'Coffee run',blurb:'Chai and espresso all round. Nobody stops typing.',
+     base:120,growth:1.8,morale:30,rest:0,work:1,perk:'Doubles all output for '+BOOST_DAYS+' days'},
+    {id:'lunch',icon:'🍕',name:'Team lunch',blurb:'Everyone piles out for biryani. Work slows right down.',
+     base:450,growth:1.75,morale:50,rest:6,work:0.5},
+    {id:'game',icon:'🎮',name:'Game break',blurb:'FIFA and a few ranked games. Almost nothing ships.',
+     base:900,growth:1.75,morale:68,rest:9,work:0.15},
+    {id:'halfday',icon:'🏖️',name:'Day off',blurb:'Lights out, everyone goes home. Zero output.',
+     base:2600,growth:1.75,morale:100,rest:14,work:0},
+    {id:'retreat',icon:'✈️',name:'Team retreat',blurb:'A week in the northern areas. Comes back a stronger team.',
+     base:11000,growth:2.2,morale:100,rest:22,work:0,
+     perk:'Permanently slows morale drain by '+Math.round(RETREAT_RELIEF*100)+'%'},
+  ];
+  const boostCost=b=> Math.round(b.base*Math.pow(b.growth,state.boostBuys[b.id]||0));
+  const cheapestBoost=()=> Math.min.apply(null,BOOSTS.map(boostCost));
+
+  function takeBoost(b){
+    if(state.rest){toast('The team is already on a break');return;}
+    if(b.id==='coffee'&&state.boostLeft>0){toast('Already caffeinated! ☕');return;}
+    const c=boostCost(b);
+    if(state.cash<c){toast('Need '+fmt(c)+' for that');return;}
+    state.cash-=c;
+    state.boostBuys[b.id]=(state.boostBuys[b.id]||0)+1;
+    state.morale=Math.min(100,state.morale+b.morale);
+    if(b.id==='coffee') state.boostLeft=BOOST_DAYS;
+    if(b.rest>0) state.rest={left:b.rest,work:b.work,label:b.name,icon:b.icon};
+    if(b.id==='retreat'){state.retreats++;toast('✈️ Retreat booked! Morale drain permanently reduced.');}
+    else toast(b.icon+' '+b.name+' · +'+b.morale+' morale');
+    renderSheet(); updateHud();
+  }
+
+  // ===================== UPGRADES =====================
+  const UPGRADES=[
+    {icon:'📚',name:'Train developer',desc:()=>'Level up your junior-most dev — more output, higher wage',
+     tier:()=>{const d=state.devs[cheapestDevIndex()];return 'Lv '+d.level+' → '+(d.level+1)+
+       ' · wage '+fmt(wage(d))+' → '+fmt(SALARY_PER_LEVEL*(d.level+1)*payrollMult())+'/day';},
+     cost:trainCost,buy(){const i=cheapestDevIndex();state.devs[i].level++;renderOffice();
+       toast(state.devs[i].avatar+' promoted to Lv '+state.devs[i].level+'!');}},
+    {icon:'⌨️',name:'Mechanical keyboards',desc:()=>'Crunch clicks ×2 — free work, no extra payroll',
+     tier:()=>'Tier '+state.keyb+' → '+(state.keyb+1)+' (crunch ×'+Math.pow(2,state.keyb+1)+')',
+     cost:keybCost,buy(){state.keyb++;toast('⌨️ Crunch now ×'+crunchMult());}},
+    {icon:'📡',name:'Fiber internet',desc:()=>'Whole team ships '+Math.round(FIBER_GAIN*100)+'% faster per tier',
+     tier:()=>'Tier '+state.fiber+' → '+(state.fiber+1)+' (output ×'+Math.pow(1+FIBER_GAIN,state.fiber+1).toFixed(2)+')',
+     cost:fiberCost,buy(){state.fiber++;toast('📡 Team output ×'+fiberMult().toFixed(2));}},
+    {icon:'🤖',name:'Automated testing',desc:()=>'Cuts payroll cost '+Math.round(AUTO_CUT*100)+'% per tier',
+     tier:()=>'Tier '+state.auto+' → '+(state.auto+1)+' (payroll at '+
+       Math.round(Math.max(0.4,Math.pow(1-AUTO_CUT,state.auto+1))*100)+'%)',
+     cost:autoCost,buy(){state.auto++;renderOffice();toast('🤖 Payroll now at '+Math.round(payrollMult()*100)+'%');}},
+  ];
+
+  // ===================== SHEET =====================
+  function openSheet(m){
+    state.sheetMode=m;
+    sheetTitle.textContent=m==='upg'?'Upgrades':m==='boost'?'Morale boosts':'Clients & capital';
+    renderSheet(); sheet.classList.add('open'); sheetOverlay.classList.add('open');
+  }
+  function closeSheet(){state.sheetMode=null;sheet.classList.remove('open');sheetOverlay.classList.remove('open');}
+  sheetOverlay.addEventListener('pointerdown',closeSheet);
+  upgBtn.addEventListener('pointerdown',()=>openSheet('upg'));
+  clientBtn.addEventListener('pointerdown',()=>openSheet('jobs'));
+  boostBtn.addEventListener('pointerdown',()=>openSheet('boost'));
+  $('moraleWrap').addEventListener('pointerdown',()=>openSheet('boost'));
+
+  function estimate(o){
+    // whole team on it, right now
+    const n=Math.max(1,state.devs.length);
+    const power=teamPower();
+    const rate=power*coord(n)*fiberMult()*moraleMult()*focusMult();
+    const d=o.work/Math.max(0.01,rate);
+    const cost=(power*SALARY_PER_LEVEL*payrollMult()+rentPerDay())*d;
+    return{d:d,cost:cost,net:o.fee-cost};
+  }
+
+  function renderSheet(){
+    if(!state.sheetMode) return;
+    sheetBody.innerHTML='';
+
+    if(state.sheetMode==='boost'){
+      if(state.projects.length){
+        const t=Math.min.apply(null,state.projects.map(p=>p.left));
+        const w=document.createElement('div');
+        w.id='deadlineWarn';
+        w.textContent='⏱ Breaks do not pause deadlines — tightest is '+days(t);
+        sheetBody.appendChild(w);
+      }
+      BOOSTS.forEach(b=>{
+        const c=boostCost(b);
+        const busy=!!state.rest||(b.id==='coffee'&&state.boostLeft>0);
+        const el=document.createElement('div');
+        el.className='card tap rest'+((state.cash<c||busy)?' locked':'');
+        let eff='<span>Morale <b>+'+b.morale+'</b></span>';
+        eff+= b.rest>0
+          ? '<span>Downtime <u>'+b.rest+' days</u></span><span>Output <u>'+Math.round(b.work*100)+'%</u></span>'
+          : '<span>No downtime</span>';
+        el.innerHTML='<div class="upg"><div class="icon">'+b.icon+'</div><div class="info">'+
+          '<div class="name">'+b.name+'</div><div class="desc">'+b.blurb+'</div></div>'+
+          '<div class="price">'+fmt(c)+'</div></div><div class="effects">'+eff+'</div>'+
+          (b.perk?'<div class="perk">★ '+b.perk+'</div>':'');
+        el.addEventListener('pointerdown',()=>takeBoost(b));
+        sheetBody.appendChild(el);
+      });
+      if(state.retreats){
+        const n=document.createElement('div');
+        n.style.cssText='font-size:15px;color:var(--amber);text-align:center;margin-top:6px';
+        n.textContent='★ '+state.retreats+' retreat'+(state.retreats>1?'s':'')+' · morale drain at '+
+          Math.round(Math.max(0.4,Math.pow(1-RETREAT_RELIEF,state.retreats))*100)+'%';
+        sheetBody.appendChild(n);
+      }
+
+    } else if(state.sheetMode==='upg'){
+      UPGRADES.forEach(u=>{
+        const c=u.cost();
+        const el=document.createElement('div');
+        el.className='card tap upg'+(state.cash<c?' locked':'');
+        el.innerHTML='<div class="icon">'+u.icon+'</div><div class="info">'+
+          '<div class="name">'+u.name+'</div><div class="desc">'+u.desc()+'</div>'+
+          '<div class="tierline">'+u.tier()+'</div></div><div class="price">'+fmt(c)+'</div>';
+        el.addEventListener('pointerdown',()=>{
+          const cc=u.cost();
+          if(state.cash<cc){toast('Need '+fmt(cc));return;}
+          state.cash-=cc; u.buy(); renderSheet(); updateHud();
+        });
+        sheetBody.appendChild(el);
+      });
+
+    } else {
+      // ---- funding ----
+      const nextRound=ROUNDS[state.roundsTaken];
+      if(nextRound){
+        const h=document.createElement('div');
+        h.className='sechead'; h.textContent='Funding';
+        sheetBody.appendChild(h);
+        const ready=state.rep>=nextRound.rep;
+        const el=document.createElement('div');
+        el.className='card fund'+(ready?' tap':' locked');
+        el.innerHTML='<div class="upg"><div class="icon">'+nextRound.icon+'</div><div class="info">'+
+          '<div class="name">'+nextRound.name+'</div><div class="desc">'+nextRound.blurb+'</div>'+
+          '<div class="tierline">'+(ready?'Ready to raise':'Needs '+nextRound.rep+'⭐ · you have '+Math.floor(state.rep)+'⭐')+
+          '</div></div><div class="price">'+fmt(nextRound.cash)+'</div></div>'+
+          '<div class="effects"><span>Up front <b>'+fmt(nextRound.cash)+'</b></span>'+
+          '<span>Recurring <b>'+fmt(nextRound.mo)+'/mo</b></span></div>';
+        if(ready) el.addEventListener('pointerdown',()=>{
+          state.cash+=nextRound.cash; state.roundsTaken++; recalcMonthly();
+          toast(nextRound.icon+' '+nextRound.name+' closed! '+fmt(nextRound.cash)+' + '+fmt(nextRound.mo)+'/mo');
+          renderSheet(); updateHud();
+        });
+        sheetBody.appendChild(el);
+      }
+
+      // ---- offers ----
+      const h2=document.createElement('div');
+      h2.className='sechead';
+      const open=MAX_PROJECTS-state.projects.length;
+      h2.textContent='Contracts · '+(open>0?open+' of 4 slots open':'all slots full');
+      sheetBody.appendChild(h2);
+
+      state.offers.forEach(o=>{
+        const T=TIERS[o.tier];
+        const gated=state.rep<T.rep, full=state.projects.length>=MAX_PROJECTS;
+        const est=estimate(o);
+        const el=document.createElement('div');
+        el.className='card job'+((gated||full)?' locked':'');
+        let html='<div class="jhead"><div><div class="client">'+o.client+'</div>'+
+          '<div class="name">'+o.name+'</div></div><div class="tierpill">'+T.name+'</div></div>'+
+          '<div class="stats"><span>Fee <b>'+fmt(o.fee)+'</b></span><span>⭐<i>'+o.rep+'</i></span>'+
+          '<span>Scope <u>'+o.work+'</u>pts</span><span>Due <u>'+o.dl+'d</u></span></div>'+
+          '<div class="est">Whole team on it: ~'+est.d.toFixed(1)+' days · payroll <b>'+
+          fmt(est.cost)+'</b> · net '+fmt(est.net)+'</div>';
+        if(gated) html+='<div class="gate">Locked · needs '+T.rep+'⭐ reputation</div>';
+        html+='<div class="takes">'+
+          '<button class="cash"'+((gated||full)?' disabled':'')+'>Take cash<small>'+fmt(o.fee)+' on delivery</small></button>'+
+          '<button class="eq"'+((gated||full)?' disabled':'')+'>Take equity<small>'+
+          fmt(o.fee*EQUITY_CASH)+' + '+fmt(o.fee*EQUITY_DIV)+'/mo forever</small></button></div>';
+        el.innerHTML=html;
+        if(!gated&&!full){
+          el.querySelector('.cash').addEventListener('pointerdown',e=>{e.stopPropagation();acceptJob(o,false);});
+          el.querySelector('.eq').addEventListener('pointerdown',e=>{e.stopPropagation();acceptJob(o,true);});
+        }
+        sheetBody.appendChild(el);
+      });
+
+      if(state.equities.length){
+        const h3=document.createElement('div');
+        h3.className='sechead';
+        h3.textContent='Equity portfolio · '+fmt(state.equities.reduce((s,e)=>s+e.div,0))+'/mo';
+        sheetBody.appendChild(h3);
+        const box=document.createElement('div');
+        box.className='card';
+        box.innerHTML=state.equities.map(e=>
+          '<div style="display:flex;justify-content:space-between;font-size:16px;padding:4px 0">'+
+          '<span>'+e.client+'</span><span style="color:var(--money);font-weight:700">'+fmt(e.div)+'/mo</span></div>').join('');
+        sheetBody.appendChild(box);
+      }
+    }
+  }
+
+  let toastTimer;
+  function toast(m){
+    toastEl.textContent=m; toastEl.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.classList.remove('show'),2100);
+  }
+
+  // ===================== HUD =====================
+  function updateHud(){
+    moneyEl.textContent=fmt(state.cash);
+    burnEl.textContent='−'+fmt(burnPerDay());
+    const rw=runway();
+    if(rw===Infinity){
+      runwayEl.textContent='profitable';
+      runwayEl.className='rw-ok';
+    } else {
+      runwayEl.textContent=Math.floor(rw)+'d runway';
+      runwayEl.className=rw>30?'rw-ok':rw>10?'rw-warn':'rw-crit';
+    }
+    sub2El.innerHTML=(state.monthly>0?'<b>+'+fmt(state.monthly)+'/mo</b> · ':'')+
+      '<span id="devCount">'+benchText+'</span>';
+    repEl.textContent=Math.floor(state.rep);
+    dayEl.textContent='Day '+Math.floor(state.day);
+    const m=state.morale;
+    moraleFill.style.width=m+'%';
+    moraleFill.style.background=m>60?'var(--money)':m>30?'var(--amber)':'var(--coral)';
+    moraleValEl.textContent=Math.round(m)+'%';
+
+    const hc=hireCost();
+    hireCostEl.textContent=state.devs.length>=MAX_DEVS?'FULL':fmt(hc);
+    hireBtn.classList.toggle('locked',state.cash<hc||state.devs.length>=MAX_DEVS);
+    const bc=cheapestBoost();
+    boostBtn.classList.toggle('locked',state.cash<bc||!!state.rest);
+    boostDot.classList.toggle('on',state.morale<55&&state.cash>=bc&&!state.rest);
+    boostHint.textContent=state.rest?days(state.rest.left)+' left':(state.morale<55?'low morale':'morale');
+    upgDot.classList.toggle('on',UPGRADES.some(u=>state.cash>=u.cost()));
+    const open=MAX_PROJECTS-state.projects.length;
+    const ready=ROUNDS[state.roundsTaken]&&state.rep>=ROUNDS[state.roundsTaken].rep;
+    clientDot.classList.toggle('on',ready||(open>0&&!state.projects.length));
+    clientHint.textContent=ready?'funding ready':(open>0?open+' slot'+(open>1?'s':'')+' open':'all busy');
+
+    if(state.sheetMode==='upg'){
+      const c=sheetBody.querySelectorAll('.card');
+      UPGRADES.forEach((u,i)=>{if(c[i])c[i].classList.toggle('locked',state.cash<u.cost());});
+    } else if(state.sheetMode==='boost'){
+      const c=sheetBody.querySelectorAll('.card.rest');
+      BOOSTS.forEach((b,i)=>{if(c[i])c[i].classList.toggle('locked',
+        state.cash<boostCost(b)||!!state.rest||(b.id==='coffee'&&state.boostLeft>0));});
+    }
+  }
+
+  // ===================== LOOP =====================
+  let last=performance.now();
+  function loop(now){
+    const dt=Math.min((now-last)/1000,1); last=now;
+    const dd=dt/DAY_SECONDS;               // elapsed in-game days
+    state.day+=dd;
+
+    // running costs come out continuously
+    const spend=burnPerDay()*dd;
+    if(state.cash>=spend){
+      state.cash-=spend;
+      if(state.unpaid>0){state.unpaid=0;brokeBanner.classList.remove('on');
+        toast('Payroll is covered again 😮‍💨');}
+    } else {
+      state.cash=0;
+      state.unpaid+=dd;
+      brokeBanner.classList.add('on');
+      state.morale=Math.max(0,state.morale-1.2*dd);
+      if(state.unpaid>=BROKE_QUIT_DAYS){state.unpaid=0;devQuits(true);}
+    }
+
+    // monthly cash flow
+    const mo=Math.floor(state.day/MONTH_DAYS);
+    if(mo>state.lastMonth){
+      state.lastMonth=mo;
+      if(state.monthly>0){
+        state.cash+=state.monthly;
+        moneyEl.classList.add('bump'); setTimeout(()=>moneyEl.classList.remove('bump'),140);
+        toast('📆 Month '+(mo+1)+' — '+fmt(state.monthly)+' in recurring revenue');
+      }
+    }
+
+    // projects: progress, deadline, payroll accrual
+    if(state.projects.length){
+      const done=[];
+      state.projects.forEach(p=>{
+        p.done+=rateFor(p.id)*dd;
+        p.spent+=burnFor(p.id)*dd;
+        p.left-=dd;
+        if(p.done>=p.work) done.push([p,true]);
+        else if(p.left<=0) done.push([p,false]);
+      });
+      done.forEach(([p,ok])=>deliver(p,ok));
+      renderStrip();
+    }
+
+    // morale
+    const busy=busyDevs().length, idle=freeDevs().length;
+    const delta=state.rest? REST_RECOVER+idle*RECOVER_PER_IDLE
+      : (idle*RECOVER_PER_IDLE+RECOVER_FLAT)-(busy*drainRate());
+    state.morale=Math.max(0,Math.min(100,state.morale+delta*dd));
+
+    if(state.morale<=0.5&&state.quitTimer<=0){state.quitTimer=QUIT_GRACE;quitWarn.classList.add('on');}
+    if(state.quitTimer>0){
+      if(state.morale>20){state.quitTimer=0;quitWarn.classList.remove('on');}
+      else{state.quitTimer-=dd;quitTimeEl.textContent=Math.ceil(Math.max(0,state.quitTimer));
+        if(state.quitTimer<=0) devQuits();}
+    }
+
+    // timers
+    if(state.rest){
+      state.rest.left-=dd;
+      if(state.rest.left<=0){const l=state.rest.label;state.rest=null;toast(l+' over — back to work 💪');}
+    }
+    if(state.boostLeft>0){
+      state.boostLeft-=dd;
+      if(state.boostLeft<=0){state.boostLeft=0;toast('Coffee wore off... 😴');}
+    }
+    if(state.rest){
+      boostBanner.classList.add('on');
+      boostTextEl.textContent=state.rest.icon+' '+state.rest.label+' · '+
+        Math.round(state.rest.work*100)+'% output ·';
+      boostTimeEl.textContent=days(state.rest.left);
+    } else if(state.boostLeft>0){
+      boostBanner.classList.add('on');
+      boostTextEl.textContent='☕ Caffeine rush ×2 ·';
+      boostTimeEl.textContent=days(state.boostLeft);
+    } else boostBanner.classList.remove('on');
+
+    updateHud();
+    requestAnimationFrame(loop);
+  }
+
+  function devQuits(unpaid){
+    state.quitTimer=0; quitWarn.classList.remove('on');
+    if(state.devs.length<=1){
+      state.morale=Math.max(state.morale,45);
+      toast(unpaid?'😰 Your last dev is working unpaid. Land a contract, fast.'
+                 :'😤 Your last dev nearly walked. Ease off.');
+      return;
+    }
+    const i=(Math.random()*state.devs.length)|0;
+    const g=state.devs[i];
+    state.devs.splice(i,1);
+    if(!unpaid) state.morale=40;
+    renderOffice(); renderStrip();
+    toast(unpaid?'💸 '+g.avatar+' left — you missed payroll. Team down to '+state.devs.length
+               :'😤 '+g.avatar+' burned out and quit! Team down to '+state.devs.length);
+  }
+
+  // ===================== BOOT =====================
+  refreshOffers(); renderOffice(); renderStrip(); updateHud();
+  requestAnimationFrame(loop);
+  setTimeout(()=>toast('$1,000 in the bank and one dev on payroll. Land a contract before the runway runs out. 📋'),700);
+})();
+</script>
+</body>
+</html>
