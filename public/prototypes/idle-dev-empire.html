@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Idle Dev Empire</title>
+<style>
+  :root{
+    --bg:#12151c; --panel:#1a1f2a; --panel-2:#232a38; --line:#2e384a;
+    --money:#4ade80; --amber:#fbbf24; --blue:#38bdf8; --purple:#a78bfa; --coral:#fb7185;
+    --text:#e6e9f0; --dim:#8b93a7;
+    --mono: ui-monospace,"SF Mono","Cascadia Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+    font-family:var(--mono);touch-action:manipulation;
+    -webkit-user-select:none;user-select:none;overscroll-behavior:none}
+  #game{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;
+    position:relative;overflow:hidden;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+
+  /* ================= HUD ================= */
+  #hud{padding:12px 16px 10px;border-bottom:1px solid #262d3c;
+    background:linear-gradient(#161a23,var(--bg));display:flex;align-items:center;gap:10px}
+  #cashCol{flex:1}
+  #cashCol .label{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+  #money{font-size:28px;font-weight:700;color:var(--money);line-height:1.15;
+    text-shadow:0 0 16px rgba(74,222,128,.22);transition:transform .08s}
+  #money.bump{transform:scale(1.06)}
+  #mps{font-size:11px;color:var(--dim);margin-top:1px}
+  #mps b{color:var(--money);font-weight:600}
+  #focusHint{text-align:right;font-size:9.5px;color:var(--dim);line-height:1.5;letter-spacing:.4px}
+  #focusHint b{display:block;font-size:11px;color:var(--blue);letter-spacing:1px}
+
+  /* ================= OFFICE ================= */
+  #office{flex:1;overflow-y:auto;padding:14px 12px 10px;
+    display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(56,189,248,.04), transparent 60%),
+      repeating-linear-gradient(0deg, transparent 0 46px, rgba(255,255,255,.018) 46px 47px),
+      repeating-linear-gradient(90deg, transparent 0 46px, rgba(255,255,255,.018) 46px 47px);}
+  .desk{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:12px 10px 9px;text-align:center;cursor:pointer;
+    transition:transform .07s, border-color .2s, box-shadow .25s;}
+  .desk:active{transform:scale(.97)}
+  .desk.flash{animation:flash .28s}
+  @keyframes flash{0%{background:#243247}100%{background:var(--panel)}}
+  .desk.focused{border-color:var(--blue);
+    box-shadow:0 0 0 1px var(--blue), 0 0 22px rgba(56,189,248,.28), inset 0 0 24px rgba(56,189,248,.06)}
+  .desk.strained{border-color:#4a3a20}
+  .desk.resting{border-color:#4a2530;filter:saturate(.75)}
+
+  /* monitor */
+  .monitor{width:74px;height:50px;margin:0 auto;background:#0b0e14;border:2px solid #333d4f;
+    border-radius:6px 6px 3px 3px;position:relative;overflow:hidden}
+  .screen{position:absolute;inset:3px;border-radius:3px;opacity:.85;
+    animation:flicker 1.3s steps(2) infinite}
+  .screen::after{content:"";position:absolute;left:6px;right:20px;top:6px;height:3px;
+    background:rgba(255,255,255,.5);border-radius:2px;
+    box-shadow:0 7px 0 -1px rgba(255,255,255,.35), 0 14px 0 -1px rgba(255,255,255,.25)}
+  @keyframes flicker{0%{opacity:.85}50%{opacity:.72}100%{opacity:.85}}
+  .desk.resting .screen{opacity:.12;animation:none}
+  .desk.resting .screen::after{opacity:.2}
+  .desk.focused .screen{animation-duration:.4s}
+  /* desk surface */
+  .surface{width:104px;height:8px;margin:-2px auto 0;background:#3a4356;border-radius:3px;
+    box-shadow:0 2px 0 #2b3242}
+  /* dev sitting in front of desk */
+  .avatar{display:block;font-size:34px;line-height:1;margin-top:-6px;position:relative;z-index:2;
+    animation:typebob 1.1s ease-in-out infinite}
+  @keyframes typebob{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+  .desk.focused .avatar{animation-duration:.35s}
+  .desk.resting .avatar{animation:none;transform:translateY(3px) rotate(-8deg);opacity:.75}
+  .zzz{position:absolute;top:8px;right:10px;font-size:15px;opacity:0;pointer-events:none}
+  .desk.resting .zzz{animation:zzz 1.8s ease-in-out infinite;opacity:1}
+  @keyframes zzz{0%{transform:translateY(0);opacity:0}30%{opacity:.9}100%{transform:translateY(-12px);opacity:0}}
+  .focusring{position:absolute;top:6px;left:8px;font-size:13px;color:var(--blue);opacity:0;
+    font-weight:700;letter-spacing:1px}
+  .desk.focused .focusring{opacity:1;animation:blink .5s steps(2) infinite}
+  @keyframes blink{50%{opacity:.4}}
+
+  .devname{font-size:10.5px;color:var(--text);margin-top:5px;font-weight:600;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .devname .lv{color:var(--purple);font-weight:700}
+  .proj{font-size:9.5px;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden}
+  .proj::before{content:"> ";color:var(--money)}
+  .proj b{color:var(--amber);font-weight:600}
+  .pbar{height:6px;background:#0c1014;border:1px solid #262f3d;border-radius:4px;overflow:hidden;margin-top:5px}
+  .pbar i{display:block;height:100%;width:0%;background:var(--money);border-radius:4px}
+  .desk.focused .pbar i{background:var(--blue);box-shadow:0 0 8px rgba(56,189,248,.7)}
+  .stressrow{display:flex;align-items:center;gap:5px;margin-top:5px}
+  .stressrow .ico{font-size:9px}
+  .sbar{flex:1;height:4px;background:#0c1014;border:1px solid #262f3d;border-radius:3px;position:relative}
+  .sbar s.bandmark{position:absolute;top:-2px;bottom:-2px;width:2px;background:rgba(230,233,240,.4);
+    text-decoration:none;border-radius:1px;pointer-events:none}
+  .sbar i{display:block;height:100%;width:0%;background:var(--money);transition:background .3s;border-radius:3px}
+  .stateTxt{font-size:8.5px;color:var(--dim);margin-top:3px;letter-spacing:.5px;height:11px}
+  .stateTxt.zone{color:var(--blue)} .stateTxt.strain{color:var(--amber)} .stateTxt.rest{color:var(--coral)}
+
+  /* empty desk (hire) */
+  .desk.empty{border-style:dashed;background:transparent;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;min-height:172px;color:var(--dim)}
+  .desk.empty .plus{font-size:30px;line-height:1;margin-bottom:6px}
+  .desk.empty .hcost{font-size:11px}
+  .desk.empty.can{border-color:var(--money);color:var(--money)}
+  .desk.empty.can .hcost{color:var(--money)}
+
+  /* floating text */
+  .float{position:absolute;font-weight:700;font-size:15px;color:var(--money);
+    pointer-events:none;z-index:40;animation:rise .82s ease-out forwards;white-space:nowrap;
+    text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .float.focus{color:var(--blue)} .float.burn{color:var(--coral)}
+  @keyframes rise{0%{opacity:0;transform:translateY(4px) scale(.8)}
+    15%{opacity:1;transform:translateY(-4px) scale(1.08)}
+    100%{opacity:0;transform:translateY(-44px) scale(1)}}
+  @media (prefers-reduced-motion: reduce){
+    .float{animation-duration:.01s}.avatar,.screen{animation:none!important}}
+
+  /* ================= BOTTOM BAR ================= */
+  #bottombar{display:flex;gap:10px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    border-top:1px solid #262d3c;background:linear-gradient(var(--bg),#161a23)}
+  #bottombar button{flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    border-radius:12px;padding:12px 0;font-family:var(--mono);font-size:13px;font-weight:600;
+    cursor:pointer;transition:transform .07s}
+  #bottombar button:active{transform:scale(.96)}
+  #btnGear{flex:0 0 54px}
+
+  /* ================= SHEETS ================= */
+  .sheet{position:absolute;left:0;right:0;bottom:0;z-index:60;background:var(--panel);
+    border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px 14px 22px;
+    transform:translateY(105%);transition:transform .22s ease;max-height:72%;overflow-y:auto}
+  .sheet.open{transform:translateY(0)}
+  .sheet h3{font-size:12px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:10px}
+  .sheet .grab{width:38px;height:4px;border-radius:2px;background:#3a4356;margin:0 auto 12px}
+  .upg{display:flex;align-items:center;gap:11px;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:12px;padding:11px 12px;margin-bottom:9px}
+  .upg .ic{font-size:22px;width:30px;text-align:center}
+  .upg .info{flex:1;min-width:0}
+  .upg .name{font-size:13px;font-weight:700}
+  .upg .desc{font-size:10.5px;color:var(--dim);margin-top:2px}
+  .buy{font-size:12px;font-weight:700;white-space:nowrap;background:#232a38;color:var(--dim);
+    border:1px solid var(--line);border-radius:9px;padding:9px 12px;cursor:pointer;
+    font-family:var(--mono);transition:transform .07s}
+  .buy.can{background:#1d3524;border-color:#2f5c3a;color:var(--money)}
+  .buy:active{transform:scale(.95)}
+  .srow{display:flex;gap:8px;margin-bottom:9px}
+  .srow button{flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:10px 0;font-family:var(--mono);font-size:11.5px;cursor:pointer}
+  .knob{margin-top:10px;font-size:11px;color:var(--dim)}
+  .knob label{display:flex;justify-content:space-between}
+  .knob input[type=range]{width:100%;accent-color:var(--blue)}
+  .scrim{position:absolute;inset:0;background:rgba(8,11,15,.55);z-index:55;opacity:0;
+    pointer-events:none;transition:opacity .2s}
+  .scrim.show{opacity:1;pointer-events:auto}
+
+  /* ================= TOAST / MODAL ================= */
+  #toast{position:absolute;bottom:86px;left:50%;transform:translateX(-50%) translateY(8px);
+    background:#0b0e14;border:1px solid var(--line);color:var(--text);font-size:12px;
+    padding:9px 16px;border-radius:20px;opacity:0;transition:all .2s;z-index:70;
+    pointer-events:none;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .overlay{position:absolute;inset:0;background:rgba(8,11,15,.8);z-index:80;
+    display:flex;align-items:center;justify-content:center;padding:24px}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:22px 20px;max-width:330px;width:100%;text-align:center}
+  .modal h2{font-size:14px;margin-bottom:6px;color:var(--blue);letter-spacing:1px}
+  .modal .big{font-size:30px;font-weight:700;color:var(--money);margin:10px 0 4px;
+    text-shadow:0 0 16px rgba(74,222,128,.25)}
+  .modal p{font-size:11.5px;color:var(--dim);margin:6px 0 14px;line-height:1.55}
+  .modal button{background:#1d3524;border:1px solid #2f5c3a;color:var(--money);border-radius:10px;
+    padding:11px 28px;font-family:var(--mono);font-size:13px;font-weight:700;cursor:pointer}
+  .modal textarea{width:100%;height:84px;background:#0b0e14;color:var(--text);
+    border:1px solid var(--line);border-radius:9px;font-family:var(--mono);font-size:10px;
+    padding:8px;resize:none;margin-bottom:12px}
+  .modal .row{display:flex;gap:8px;justify-content:center}
+  .modal .ghost{background:var(--panel-2);border-color:var(--line);color:var(--dim)}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="hud">
+    <div id="cashCol">
+      <div class="label">Idle Dev Empire</div>
+      <div id="money">$0</div>
+      <div id="mps"><b>$0.0</b>/s</div>
+    </div>
+    <div id="focusHint"><b>TAP A DEV</b>+2s focus ×3<br>the zone burns 🔥 endurance</div>
+  </div>
+
+  <div id="office"></div>
+
+  <div id="bottombar">
+    <button id="btnUpg">⬆ Upgrades</button>
+    <button id="btnGear">⚙️</button>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+
+  <!-- upgrades sheet -->
+  <div class="sheet" id="upgSheet">
+    <div class="grab"></div>
+    <h3>Upgrades</h3>
+    <div class="upg"><div class="ic">📚</div>
+      <div class="info"><div class="name">Train Developer</div><div class="desc" id="trainDesc"></div></div>
+      <button class="buy" id="buyTrain"></button></div>
+    <div class="upg"><div class="ic">🛠️</div>
+      <div class="info"><div class="name">Better Tooling</div><div class="desc" id="toolsDesc"></div></div>
+      <button class="buy" id="buyTools"></button></div>
+    <div class="upg"><div class="ic">🎧</div>
+      <div class="info"><div class="name">Deep Work</div><div class="desc" id="deepDesc"></div></div>
+      <button class="buy" id="buyDeep"></button></div>
+    <div class="upg"><div class="ic">☕</div>
+      <div class="info"><div class="name">Coffee Machine</div><div class="desc" id="coffeeDesc"></div></div>
+      <button class="buy" id="buyCoffee"></button></div>
+  </div>
+
+  <!-- hire sheet -->
+  <div class="sheet" id="hireSheet">
+    <div class="grab"></div>
+    <h3>Hire — desk <span id="hireSlotNo"></span></h3>
+    <div id="hireRows"></div>
+  </div>
+
+  <!-- settings / debug sheet -->
+  <div class="sheet" id="gearSheet">
+    <div class="grab"></div>
+    <h3>Settings</h3>
+    <div class="srow">
+      <button id="btnSave">export save</button>
+      <button id="btnLoad">import save</button>
+      <button id="btnSound">sound: on</button>
+    </div>
+    <h3 style="margin-top:14px">Debug / tuning knobs</h3>
+    <div class="knob"><label>focus multiplier <span id="vFm">3.0×</span></label><input type="range" id="kFm" min="2" max="5" step="0.5" value="3"></div>
+    <div class="knob"><label>focus per tap <span id="vFd">+2.0s</span></label><input type="range" id="kFd" min="0.5" max="6" step="0.5" value="2"></div>
+    <div class="knob"><label>stress per tap <span id="vTb">12</span></label><input type="range" id="kTb" min="5" max="30" step="1" value="12"></div>
+    <div class="knob"><label>focus strain /s <span id="vFs">3.0</span></label><input type="range" id="kFs" min="0" max="8" step="0.5" value="3"></div>
+    <div class="knob"><label>stress decay /s <span id="vDc">4.5</span></label><input type="range" id="kDc" min="0.5" max="10" step="0.5" value="4.5"></div>
+    <div class="srow" style="margin-top:10px">
+      <button id="dbgMoney">+$1,000</button>
+      <button id="dbgSkip">skip +1 hour</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- welcome back modal -->
+  <div class="overlay hidden" id="wbOverlay">
+    <div class="modal">
+      <h2>WELCOME BACK</h2>
+      <p id="wbAway">You were away for 0m.</p>
+      <div class="big" id="wbEarn">+$0</div>
+      <p>The team kept shipping while you were gone.<br>(50% offline rate · capped at 2h)</p>
+      <button id="wbClose">collect</button>
+    </div>
+  </div>
+
+  <!-- save modal -->
+  <div class="overlay hidden" id="svOverlay">
+    <div class="modal">
+      <h2 id="svTitle">SAVE</h2>
+      <p id="svHint"></p>
+      <textarea id="svText" spellcheck="false"></textarea>
+      <div class="row">
+        <button id="svAction">copy</button>
+        <button class="ghost" id="svClose">close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================
+   Idle Dev Empire — office edition
+   Same authoritative sim as before; UI = office floor with
+   devs at desks (Idle Developers visual style).
+   ========================================================= */
+
+// ---------- tuning knobs ----------
+const K = {
+  focusMult: 3.0, focusAdd: 2.0, focusCap: 30, tapStress: 12, focusStrain: 3.0, stressDecay: 4.5,
+  freeBand: 60, minEff: 0.4, restDur: 25, restRecoverTo: 35,
+  offlineRate: 0.5, offlineCap: 2 * 3600,
+};
+
+// ---------- content ----------
+const PROJECTS = [
+  { id:"bug",      name:"bug fix",       work:10, pay:15  },
+  { id:"feat",     name:"feature",       work:30, pay:55  },
+  { id:"contract", name:"contract",      work:75, pay:160 },
+];
+const HANDLES = ["kernel_kat","null_ptr_nina","async_ali","segfault_sam","merge_mo"];
+const SCREENS = ["#38bdf8","#a78bfa","#4ade80","#fb7185","#fbbf24"];
+const SPEC_BONUS = 1.25;   // specialist contract pay bonus
+const TYPES = {
+  junior: {
+    tag:"JR", name:"Junior", ava:"🐥", col:"#4ade80",
+    rate:0.7, cost:0.6, band:80, recov:1.4, strain:0.6,
+    blurb:"0.7× speed · tough & fast recovery — best tap value, safe to mash",
+  },
+  senior: {
+    tag:"SR", name:"Senior", ava:"🧙", col:"#a78bfa",
+    rate:1.6, cost:1.8, band:45, recov:0.7, strain:1.4,
+    blurb:"1.6× speed idle engine — fragile: ~6 taps to burnout, slow recovery",
+  },
+  specialist: {
+    tag:"SP", name:"Specialist", ava:"🥷", col:"#fb7185",
+    rate:0.85, cost:1.3, band:60, recov:1.0, strain:1.0,
+    blurb:"contracts only · +25% pay — steady big tickets, solid tap value",
+  },
+};
+const HIRE_COST = [0, 150, 900, 4500, 20000];
+const MAX_DEVS = 5;
+
+const levelCost   = lvl => Math.floor(25 * Math.pow(1.4, lvl - 1));
+const devRate     = lvl => Math.pow(1.18, lvl - 1);
+const toolsMult   = n   => Math.pow(1.25, n);
+const toolsCost   = n   => Math.floor(100 * Math.pow(1.9, n));
+const coffeeBonus = n   => n * 0.35;
+const coffeeCost  = n   => Math.floor(80 * Math.pow(1.8, n));
+const focusAddTotal = () => K.focusAdd + S.deepWork * 0.5;   // seconds added per tap
+const deepCost    = n   => Math.floor(140 * Math.pow(2.0, n));
+
+// ---------- state ----------
+let S = null;
+function newDev(i, typeId){
+  return { handle:HANDLES[i], type:(typeId || "junior"), color:SCREENS[i],
+           level:1, stress:0, focusT:0, resting:false, restT:0, project:null };
+}
+function newGame(){
+  return { money:0, totalEarned:0, devs:[newDev(0,"junior")], tools:0, coffee:0, deepWork:0, sound:true, savedAt:Date.now() };
+}
+function assignProject(dev){
+  if (dev.type === "specialist"){
+    const p = PROJECTS[2];   // contracts only, at a premium
+    dev.project = { id:p.id, name:p.name, work:p.work, prog:0, pay:Math.round(p.pay * SPEC_BONUS) };
+    return;
+  }
+  const p = PROJECTS[Math.floor(Math.random() * PROJECTS.length)];
+  dev.project = { id:p.id, name:p.name, work:p.work, prog:0, pay:p.pay };
+}
+
+// ---------- core simulation ----------
+function efficiency(stress, band){
+  if (band == null) band = K.freeBand;
+  if (stress < band) return 1;
+  const t = (stress - band) / (100 - band);
+  return 1 - (1 - K.minEff) * t;
+}
+function triggerBurnout(dev, silent){
+  dev.resting = true; dev.restT = K.restDur; dev.focusT = 0;   // banked focus is FORFEIT
+  if (silent) return;
+  sfxBurnout();
+  toast(dev.handle + " burned out — resting " + K.restDur + "s ☕");
+  const i = S.devs.indexOf(dev), desk = deskEl(i);
+  if (desk){
+    const r = desk.getBoundingClientRect(), g = gameEl.getBoundingClientRect();
+    spawnFloatAbs(r.left - g.left + r.width/2 - 30, r.top - g.top + 30, "BURNOUT!", "burn");
+  }
+}
+function tick(dt, silent){
+  for (const dev of S.devs){
+    if (dev.resting){
+      dev.restT -= dt;
+      dev.stress = Math.max(K.restRecoverTo, dev.stress - dt * (100 - K.restRecoverTo) / K.restDur);
+      if (dev.restT <= 0){ dev.resting = false; dev.stress = K.restRecoverTo; }
+      continue;
+    }
+    let mult = 1;
+    if (dev.focusT > 0){
+      dev.focusT -= dt; mult = K.focusMult;
+      dev.stress = Math.min(100, dev.stress + dt * K.focusStrain * TYPES[dev.type].strain);
+      if (dev.stress >= 100){ triggerBurnout(dev, silent); continue; }
+    } else {
+      dev.stress = Math.max(0, dev.stress - dt * (K.stressDecay + coffeeBonus(S.coffee)) * TYPES[dev.type].recov);
+    }
+    if (!dev.project) assignProject(dev);
+    // In the zone = full throttle. Stress costs endurance + burnout risk, not speed.
+    // The efficiency penalty applies only OUTSIDE focus — that's the hangover.
+    const T = TYPES[dev.type];
+    const rate = devRate(dev.level) * T.rate * (mult > 1 ? mult : efficiency(dev.stress, T.band));
+    dev.project.prog += rate * dt;
+    let earnedTotal = 0;
+    while (dev.project.prog >= dev.project.work){
+      const rem = dev.project.prog - dev.project.work;
+      earnedTotal += Math.floor(dev.project.pay * toolsMult(S.tools));
+      assignProject(dev);
+      dev.project.prog = rem;
+    }
+    if (earnedTotal > 0){
+      S.money += earnedTotal; S.totalEarned += earnedTotal;
+      if (!silent) onProjectDone(dev, earnedTotal);
+    }
+  }
+}
+function avgIncomePerSec(){
+  const basePPW = PROJECTS.reduce((a,p)=>a + p.pay/p.work, 0) / PROJECTS.length;
+  const specPPW = PROJECTS[2].pay * SPEC_BONUS / PROJECTS[2].work;
+  let sum = 0;
+  for (const d of S.devs){
+    const T = TYPES[d.type];
+    sum += devRate(d.level) * T.rate * (d.type === "specialist" ? specPPW : basePPW);
+  }
+  return sum * toolsMult(S.tools);
+}
+function applyOffline(seconds){
+  const t = Math.min(seconds, K.offlineCap);
+  const earned = Math.floor(avgIncomePerSec() * t * K.offlineRate);
+  if (earned <= 0 || seconds < 30) return;
+  S.money += earned; S.totalEarned += earned;
+  for (const d of S.devs){ d.stress = 0; d.resting = false; d.focusT = 0; }
+  showWelcome(seconds, earned);
+}
+
+// ---------- interaction ----------
+function tapDev(i, x, y){
+  const dev = S.devs[i];
+  if (dev.resting){ spawnFloat(x, y, "resting 💤", "burn"); return; }
+  const add = focusAddTotal();
+  const before = dev.focusT;
+  dev.focusT = Math.min(K.focusCap, dev.focusT + add);   // STACKS on remaining time
+  const gained = dev.focusT - before;
+  dev.stress = Math.min(100, dev.stress + K.tapStress * TYPES[dev.type].strain);
+  sfxTap();
+  const desk = deskEl(i);
+  if (desk){ desk.classList.remove("flash"); void desk.offsetWidth; desk.classList.add("flash"); }
+  const capped = gained < add - 0.01;
+  spawnFloat(x, y, capped ? "MAX" : "+" + trimNum(add) + "s", capped ? "burn" : "focus");
+  if (dev.stress >= 100) triggerBurnout(dev, false);
+}
+let lastCashSfx = 0;
+const floatLast = {};
+function onProjectDone(dev, earned){
+  const i = S.devs.indexOf(dev);
+  const now = performance.now();
+  earnLog.push({ t: now, v: earned });
+  bumpMoney();
+  const desk = deskEl(i);
+  if (desk && (!floatLast[i] || now - floatLast[i] > 250)){
+    floatLast[i] = now;
+    const r = desk.getBoundingClientRect(), g = gameEl.getBoundingClientRect();
+    spawnFloatAbs(r.left - g.left + r.width/2 - 16, r.top - g.top + 26, "+$" + fmt(earned), "");
+  }
+  if (now - lastCashSfx > 120){ lastCashSfx = now; sfxCash(); }
+}
+function cheapestDevIndex(){
+  let mi = 0;
+  S.devs.forEach((d,i)=>{ if (d.level < S.devs[mi].level) mi = i; });
+  return mi;
+}
+function buyLevel(i){
+  const dev = S.devs[i];
+  const c = levelCost(dev.level);
+  if (S.money < c) return;
+  S.money -= c; dev.level++;
+  sfxBuy(); structureDirty = true;
+  toast(TYPES[dev.type].ava + " " + dev.handle + " → Lv " + dev.level + "!");
+}
+function buyTrain(){ buyLevel(cheapestDevIndex()); renderShop(); }
+function hireCostFor(typeId, slot){ return Math.round(HIRE_COST[slot] * TYPES[typeId].cost); }
+function buyDev(typeId){
+  typeId = typeId || "junior";
+  const n = S.devs.length;
+  if (n >= MAX_DEVS) return;
+  const c = hireCostFor(typeId, n);
+  if (S.money < c) return;
+  S.money -= c;
+  S.devs.push(newDev(n, typeId));
+  sfxBuy(); structureDirty = true;
+  closeSheets();
+  toast(TYPES[typeId].ava + " " + TYPES[typeId].name + " " + HANDLES[n] + " hired! 🎉");
+}
+function buyTools(){
+  const c = toolsCost(S.tools);
+  if (S.money < c) return;
+  S.money -= c; S.tools++; sfxBuy(); renderShop();
+  toast("🛠️ Clients now pay ×" + toolsMult(S.tools).toFixed(2));
+}
+function buyDeep(){
+  const c = deepCost(S.deepWork);
+  if (S.money < c) return;
+  S.money -= c; S.deepWork++; sfxBuy(); renderShop();
+  toast("🎧 Each tap now adds +" + focusAddTotal().toFixed(1) + "s of focus");
+}
+function buyCoffee(){
+  const c = coffeeCost(S.coffee);
+  if (S.money < c) return;
+  S.money -= c; S.coffee++; sfxBuy(); renderShop();
+  toast("☕ Fresh brew! Stress recovery up");
+}
+
+// ---------- rolling $/s ----------
+const earnLog = [];
+function currentRate(){
+  const now = performance.now(), win = 8000;
+  while (earnLog.length && now - earnLog[0].t > win) earnLog.shift();
+  return earnLog.reduce((a,e)=>a+e.v, 0) / (win/1000);
+}
+
+// ---------- rendering ----------
+const $ = id => document.getElementById(id);
+const gameEl = $("game"), officeEl = $("office"), moneyEl = $("money");
+const deskEl = i => officeEl.querySelector('.desk[data-i="' + i + '"]');
+function trimNum(v){ return (v % 1 ? v.toFixed(1) : String(v)); }
+function fmt(n){
+  if (n >= 1e9) return (n/1e9).toFixed(2) + "B";
+  if (n >= 1e6) return (n/1e6).toFixed(2) + "M";
+  if (n >= 1e4) return (n/1e3).toFixed(1) + "K";
+  return Math.floor(n).toLocaleString("en-US");
+}
+function bumpMoney(){
+  moneyEl.classList.add("bump");
+  setTimeout(()=>moneyEl.classList.remove("bump"), 90);
+}
+
+let structureDirty = true;
+function renderOffice(){
+  officeEl.innerHTML = "";
+  S.devs.forEach((dev, i) => {
+    const T = TYPES[dev.type];
+    const d = document.createElement("div");
+    d.className = "desk";
+    d.dataset.i = i;
+    d.innerHTML =
+      '<span class="focusring">FOCUS</span><span class="zzz">💤</span>' +
+      '<div class="monitor"><div class="screen" style="background:' + dev.color +
+        ';animation-delay:' + ((i*0.19)%1.2) + 's"></div></div>' +
+      '<div class="surface"></div>' +
+      '<span class="avatar">' + T.ava + '</span>' +
+      '<div class="devname">' + dev.handle +
+        ' <span class="lv" style="color:' + T.col + '">' + T.tag + dev.level + '</span></div>' +
+      '<div class="proj"></div>' +
+      '<div class="pbar"><i></i></div>' +
+      '<div class="stressrow"><span class="ico">🔥</span><div class="sbar"><i></i>' +
+        '<s class="bandmark" style="left:' + T.band + '%"></s></div></div>' +
+      '<div class="stateTxt"></div>';
+    officeEl.appendChild(d);
+  });
+  if (S.devs.length < MAX_DEVS){
+    const c = hireCostFor("junior", S.devs.length);
+    const e = document.createElement("div");
+    e.className = "desk empty" + (S.money >= c ? " can" : "");
+    e.id = "hireDesk";
+    e.innerHTML = '<div class="plus">＋</div><div>hire a dev</div>' +
+                  '<div class="hcost">from $' + fmt(c) + '</div>';
+    e.addEventListener("pointerdown", ev => { ev.stopPropagation(); openHireSheet(); });
+    officeEl.appendChild(e);
+  }
+}
+function renderLive(){
+  moneyEl.textContent = "$" + fmt(S.money);
+  $("mps").innerHTML = "<b>$" + currentRate().toFixed(1) + "</b>/s";
+  S.devs.forEach((dev, i) => {
+    const el = deskEl(i);
+    if (!el) return;
+    el.classList.toggle("focused", dev.focusT > 0);
+    el.classList.toggle("resting", dev.resting);
+    const T = TYPES[dev.type];
+    el.classList.toggle("strained", !dev.resting && dev.stress >= T.band);
+    const proj = el.querySelector(".proj");
+    if (dev.project){
+      proj.innerHTML = dev.project.name + " · <b>$" +
+        fmt(Math.floor(dev.project.pay * toolsMult(S.tools))) + "</b>";
+      el.querySelector(".pbar i").style.width =
+        Math.min(100, dev.project.prog / dev.project.work * 100) + "%";
+    }
+    const sb = el.querySelector(".sbar i");
+    sb.style.width = dev.stress + "%";
+    sb.style.background = dev.stress >= T.band
+      ? (dev.stress > 85 ? "var(--coral)" : "var(--amber)") : "var(--money)";
+    const st = el.querySelector(".stateTxt");
+    if (dev.resting){ st.textContent = "resting… " + Math.ceil(dev.restT) + "s"; st.className = "stateTxt rest"; }
+    else if (dev.focusT > 0){
+      const hot = dev.stress >= T.band;
+      st.textContent = (hot ? "⚠ " : "") + "in the zone " + dev.focusT.toFixed(1) + "s";
+      st.className = "stateTxt " + (hot ? "strain" : "zone");
+    }
+    else if (dev.stress >= T.band){ st.textContent = Math.round(efficiency(dev.stress, T.band)*100) + "% speed"; st.className = "stateTxt strain"; }
+    else { st.textContent = "working"; st.className = "stateTxt"; }
+  });
+  const hd = $("hireDesk");
+  if (hd) hd.classList.toggle("can", S.money >= hireCostFor("junior", S.devs.length));
+}
+function renderShop(){
+  const ti = cheapestDevIndex(), tdev = S.devs[ti], tc = levelCost(tdev.level);
+  $("trainDesc").textContent = TYPES[tdev.type].ava + " " + tdev.handle + " Lv" + tdev.level + " → Lv" + (tdev.level+1) + " (+18% speed)";
+  const bTrain = $("buyTrain");
+  bTrain.textContent = "$" + fmt(tc);
+  bTrain.className = "buy " + (S.money >= tc ? "can" : "");
+  const c1 = toolsCost(S.tools);
+  $("toolsDesc").textContent = "Clients pay ×" + toolsMult(S.tools).toFixed(2) + " → ×" + toolsMult(S.tools+1).toFixed(2);
+  const bT = $("buyTools");
+  bT.textContent = "Lv" + S.tools + " · $" + fmt(c1);
+  bT.className = "buy " + (S.money >= c1 ? "can" : "");
+  const c3 = deepCost(S.deepWork);
+  $("deepDesc").textContent = "Tap adds +" + focusAddTotal().toFixed(1) + "s → +" +
+    (focusAddTotal() + 0.5).toFixed(1) + "s (stacks, max " + K.focusCap + "s)";
+  const bD = $("buyDeep");
+  bD.textContent = "Lv" + S.deepWork + " · $" + fmt(c3);
+  bD.className = "buy " + (S.money >= c3 ? "can" : "");
+  const c2 = coffeeCost(S.coffee);
+  $("coffeeDesc").textContent = "Recovery " + (K.stressDecay + coffeeBonus(S.coffee)).toFixed(2) +
+    "/s → " + (K.stressDecay + coffeeBonus(S.coffee+1)).toFixed(2) + "/s";
+  const bC = $("buyCoffee");
+  bC.textContent = "Lv" + S.coffee + " · $" + fmt(c2);
+  bC.className = "buy " + (S.money >= c2 ? "can" : "");
+}
+
+// ---------- floating text ----------
+function spawnFloat(clientX, clientY, text, cls){
+  const g = gameEl.getBoundingClientRect();
+  spawnFloatAbs(clientX - g.left - 16 + (Math.random()*16 - 8), clientY - g.top - 26, text, cls);
+}
+function spawnFloatAbs(x, y, text, cls){
+  const f = document.createElement("div");
+  f.className = "float" + (cls ? " " + cls : "");
+  f.textContent = text;
+  f.style.left = x + "px";
+  f.style.top = y + "px";
+  gameEl.appendChild(f);
+  setTimeout(()=>f.remove(), 840);
+}
+
+// ---------- toast ----------
+let toastTimer;
+function toast(msg){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 1500);
+}
+
+// ---------- sfx ----------
+let AC = null;
+function ctx(){ if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); return AC; }
+function blip(freq, dur, type, vol, when){
+  if (!S.sound) return;
+  try{
+    const a = ctx(), o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, a.currentTime + when);
+    g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + when + dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(a.currentTime + when); o.stop(a.currentTime + when + dur);
+  }catch(e){}
+}
+const sfxTap     = () => blip(620, .07, "square", .05, 0);
+const sfxCash    = () => { blip(880, .07, "triangle", .06, 0); blip(1320, .1, "triangle", .05, .06); };
+const sfxBuy     = () => { blip(440, .06, "square", .05, 0); blip(660, .08, "square", .05, .05); };
+const sfxBurnout = () => { blip(300, .15, "sawtooth", .06, 0); blip(180, .25, "sawtooth", .05, .1); };
+
+// ---------- hire sheet ----------
+function openHireSheet(){
+  const n = S.devs.length;
+  if (n >= MAX_DEVS) return;
+  $("hireSlotNo").textContent = (n + 1) + " · " + HANDLES[n];
+  const rows = $("hireRows");
+  rows.innerHTML = "";
+  for (const id of Object.keys(TYPES)){
+    const T = TYPES[id], c = hireCostFor(id, n);
+    rows.innerHTML +=
+      '<div class="upg"><div class="ic">' + T.ava + '</div>' +
+      '<div class="info"><div class="name" style="color:' + T.col + '">' + T.name + '</div>' +
+      '<div class="desc">' + T.blurb + '</div></div>' +
+      '<button class="buy ' + (S.money >= c ? 'can' : '') + '" data-hire="' + id + '">$' + fmt(c) + '</button></div>';
+  }
+  $("hireSheet").classList.add("open");
+  $("scrim").classList.add("show");
+}
+$("hireRows").addEventListener("pointerdown", ev => {
+  const b = ev.target.closest("[data-hire]");
+  if (b) buyDev(b.dataset.hire);
+});
+
+// ---------- sheets ----------
+function openSheet(id){ $(id).classList.add("open"); $("scrim").classList.add("show"); renderShop(); }
+function closeSheets(){
+  $("upgSheet").classList.remove("open");
+  $("gearSheet").classList.remove("open");
+  $("hireSheet").classList.remove("open");
+  $("scrim").classList.remove("show");
+}
+$("btnUpg").onclick = () => openSheet("upgSheet");
+$("btnGear").onclick = () => openSheet("gearSheet");
+$("scrim").onclick = closeSheets;
+$("buyTrain").onclick = buyTrain;
+$("buyTools").onclick = buyTools;
+$("buyDeep").onclick = buyDeep;
+$("buyCoffee").onclick = buyCoffee;
+
+// ---------- modals: welcome back + save ----------
+function showWelcome(awaySec, earned){
+  const m = Math.floor(awaySec / 60), h = Math.floor(m / 60);
+  $("wbAway").textContent = "You were away for " + (h ? h + "h " + (m%60) + "m" : m + "m") + ".";
+  $("wbEarn").textContent = "+$" + fmt(earned);
+  $("wbOverlay").classList.remove("hidden");
+  sfxCash();
+}
+$("wbClose").onclick = () => $("wbOverlay").classList.add("hidden");
+
+function exportSave(){
+  S.savedAt = Date.now();
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+  $("svTitle").textContent = "EXPORT SAVE";
+  $("svHint").textContent = "Copy this code somewhere safe. Import it later to continue — offline earnings included.";
+  $("svText").value = code;
+  $("svAction").textContent = "copy";
+  $("svAction").onclick = () => { $("svText").select(); document.execCommand("copy"); };
+  $("svOverlay").classList.remove("hidden");
+}
+function importSave(){
+  $("svTitle").textContent = "IMPORT SAVE";
+  $("svHint").textContent = "Paste a save code below.";
+  $("svText").value = "";
+  $("svAction").textContent = "load";
+  $("svAction").onclick = () => {
+    try{
+      const data = JSON.parse(decodeURIComponent(escape(atob($("svText").value.trim()))));
+      if (!data.devs) throw 0;
+      S = Object.assign(newGame(), data);
+      // backfill visual fields for older saves
+      S.deepWork = S.deepWork || 0;
+      S.devs.forEach((d,i)=>{ d.type = TYPES[d.type] ? d.type : "junior"; d.color = d.color || SCREENS[i]; });
+      $("svOverlay").classList.add("hidden");
+      closeSheets();
+      structureDirty = true;
+      const away = (Date.now() - (S.savedAt || Date.now())) / 1000;
+      applyOffline(away);
+    }catch(e){ $("svHint").textContent = "That code didn't parse. Check it and try again."; }
+  };
+  $("svOverlay").classList.remove("hidden");
+}
+$("svClose").onclick = () => $("svOverlay").classList.add("hidden");
+$("btnSave").onclick = exportSave;
+$("btnLoad").onclick = importSave;
+$("btnSound").onclick = () => { S.sound = !S.sound; $("btnSound").textContent = "sound: " + (S.sound ? "on" : "off"); };
+
+// ---------- debug knobs ----------
+function bindKnob(id, label, key, fmtFn){
+  $(id).oninput = e => { K[key] = parseFloat(e.target.value); $(label).textContent = fmtFn(K[key]); };
+}
+bindKnob("kFm","vFm","focusMult", v => v.toFixed(1) + "×");
+bindKnob("kFd","vFd","focusAdd",  v => "+" + v.toFixed(1) + "s");
+bindKnob("kTb","vTb","tapStress", v => "" + v);
+bindKnob("kFs","vFs","focusStrain", v => v.toFixed(1));
+bindKnob("kDc","vDc","stressDecay", v => v.toFixed(1));
+$("dbgMoney").onclick = () => { S.money += 1000; renderShop(); };
+$("dbgSkip").onclick  = () => { closeSheets(); applyOffline(3600); };
+
+// ---------- tap devs (event delegation, pointer coords) ----------
+officeEl.addEventListener("pointerdown", ev => {
+  const desk = ev.target.closest(".desk");
+  if (!desk || desk.classList.contains("empty")) return;
+  tapDev(+desk.dataset.i, ev.clientX, ev.clientY);
+});
+
+// ---------- main loop ----------
+let last = performance.now();
+let shopTimer = 0;
+function frame(now){
+  let dt = (now - last) / 1000;
+  last = now;
+  if (dt > 0.5) dt = 0.5;
+  tick(dt, false);
+  if (structureDirty){ structureDirty = false; renderOffice(); renderShop(); }
+  renderLive();
+  shopTimer += dt;
+  if (shopTimer > 1){ shopTimer = 0; renderShop(); }
+  requestAnimationFrame(frame);
+}
+
+// ---------- boot ----------
+S = newGame();
+renderOffice();
+renderShop();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

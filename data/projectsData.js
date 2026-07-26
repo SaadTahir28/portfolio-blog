@@ -2,6 +2,14 @@ import { description, title, youtube } from "./siteMetadata"
 
 const projectsData = [
   {
+    title: 'Idle Dev Empire | Playable Prototype',
+    description:
+      'A browser-based idle tycoon prototype built with pure HTML5 and JavaScript. Build your own software empire: hire and train developers, ship client projects, cover payroll, keep morale up, take funding rounds and buy upgrades before your team walks out and you run out of cash. Hit the play button to run it right in your browser.',
+    imgSrc: '/static/images/projectCards/idle-dev-empire.png',
+    play: '/prototypes/idle-dev-empire.html',
+    tools: ['HTML5', 'JavaScript', 'Prototype', 'Web', 'Idle', 'Tycoon'],
+  },
+  {
     title: 'Gravity Color Switch | Playable Prototype',
     description:
       'A playable browser prototype built with pure HTML5 Canvas and JavaScript. You climb endlessly, and your color matches the wall you are stuck to. Tap to flip sideways and match the color of each bar ahead. Hit the play button to run it right in your browser.',
