@@ -8,19 +8,45 @@ import { IoGameController } from "react-icons/io5";
 const ProjectCard = ({ title, description, imgSrc, href, tools, deployed, youtube, play }) => (
   <div className="card">
     <div className="relative -mt-[35%] w-full shrink-0 overflow-hidden rounded-xl shadow-2xl before:absolute before:inset-0 before:z-10 before:bg-black/20 sm:-mt-0 sm:w-1/2 md:-ml-[35%] md:w-8/12">
-      <Image
-        title={title}
-        alt={title}
-        src={imgSrc}
-        width={1200}
-        height={630}
-        layout="responsive"
-        placeholder="blur"
-        objectFit="cover"
-        blurDataURL={imgSrc}
-        quality={50}
-        className="backdrop-blur-xl transition-all duration-300 lg:group-hover:scale-110"
-      />
+      {play ? (
+        <Link href={play}>
+          <a
+            title="Play Prototype"
+            target="_blank"
+            rel="noopener noreferrer"
+            href={play}
+            className="relative z-20 block cursor-pointer"
+          >
+            <Image
+              title={title}
+              alt={title}
+              src={imgSrc}
+              width={1200}
+              height={630}
+              layout="responsive"
+              placeholder="blur"
+              objectFit="cover"
+              blurDataURL={imgSrc}
+              quality={50}
+              className="cursor-pointer backdrop-blur-xl transition-all duration-300 lg:group-hover:scale-110"
+            />
+          </a>
+        </Link>
+      ) : (
+        <Image
+          title={title}
+          alt={title}
+          src={imgSrc}
+          width={1200}
+          height={630}
+          layout="responsive"
+          placeholder="blur"
+          objectFit="cover"
+          blurDataURL={imgSrc}
+          quality={50}
+          className="backdrop-blur-xl transition-all duration-300 lg:group-hover:scale-110"
+        />
+      )}
     </div>
 
     <div className="flex flex-col justify-start gap-3">

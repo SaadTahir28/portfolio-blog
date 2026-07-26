@@ -5,7 +5,7 @@ const projectsData = [
     title: 'Idle Dev Empire | Playable Prototype',
     description:
       'A browser-based idle tycoon prototype built with pure HTML5 and JavaScript. Build your own software empire: hire and train developers, ship client projects, cover payroll, keep morale up, take funding rounds and buy upgrades before your team walks out and you run out of cash. Hit the play button to run it right in your browser.',
-    imgSrc: '/static/images/projectCards/idle-dev-empire.png',
+    imgSrc: '/static/images/projectCards/idle_dev_empire.png',
     play: '/prototypes/idle-dev-empire.html',
     tools: ['HTML5', 'JavaScript', 'Prototype', 'Web', 'Idle', 'Tycoon'],
   },
