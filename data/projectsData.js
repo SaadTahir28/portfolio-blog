@@ -1,22 +1,8 @@
 import { description, title, youtube } from "./siteMetadata"
 
+// Client and personal projects. Playable prototypes live in data/vibeCodingData.js
+// and are shown on /vibe-coding, not here.
 const projectsData = [
-  {
-    title: 'Idle Dev Empire | Playable Prototype',
-    description:
-      'A browser-based idle tycoon prototype built with pure HTML5 and JavaScript. Build your own software empire: hire and train developers, ship client projects, cover payroll, keep morale up, take funding rounds and buy upgrades before your team walks out and you run out of cash. Hit the play button to run it right in your browser.',
-    imgSrc: '/static/images/projectCards/idle_dev_empire.png',
-    play: '/prototypes/idle-dev-empire.html',
-    tools: ['HTML5', 'JavaScript', 'Prototype', 'Web', 'Idle', 'Tycoon'],
-  },
-  {
-    title: 'Gravity Color Switch | Playable Prototype',
-    description:
-      'A playable browser prototype built with pure HTML5 Canvas and JavaScript. You climb endlessly, and your color matches the wall you are stuck to. Tap to flip sideways and match the color of each bar ahead. Hit the play button to run it right in your browser.',
-    imgSrc: '/static/images/projectCards/gravity-color-switch.png',
-    play: '/prototypes/gravity-color-switch.html',
-    tools: ['HTML5', 'Canvas', 'JavaScript', 'Prototype', 'Web', 'Hyper Casual'],
-  },
   {
     title: 'Super Jump - Flip Jump Master',
     description:
