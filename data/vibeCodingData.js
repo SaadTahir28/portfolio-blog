@@ -1,6 +1,14 @@
-// Playable prototypes. Each `play` path points at a self-contained HTML file in
-// public/prototypes. Array order is the display order on /vibe-coding.
+// Playable prototypes. Each `play` path points at a self-contained HTML file (or a
+// folder's index.html) in public/prototypes. Array order is the display order on /vibe-coding.
 const vibeCodingData = [
+  {
+    title: 'PGN Replay Board | Playable Prototype',
+    description:
+      'A browser chess replay board built with HTML5 and JavaScript. Paste or upload a PGN to replay games with animated moves and sound, then run a Stockfish game review that flags best moves, inaccuracies, mistakes and blunders with an eval bar and arrows. Hit the play button to run it right in your browser.',
+    imgSrc: '/static/images/projectCards/chess_analyzer.png',
+    play: '/prototypes/chess-analyzer/index.html',
+    tools: ['HTML5', 'JavaScript', 'Stockfish', 'WebAssembly', 'Chess', 'Prototype', 'Web'],
+  },
   {
     title: 'Idle Developers 3D | Playable Prototype',
     description:

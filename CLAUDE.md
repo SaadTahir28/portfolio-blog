@@ -81,6 +81,8 @@ Tags are never declared anywhere — `lib/tags.js` scans all post front matter a
 
 Browser games live as **single self-contained HTML files** in `public/prototypes/` (own canvas/WebGL, inline CSS and JS, no build step, not part of the Next.js bundle). A prototype is surfaced by adding an entry with `play: '/prototypes/<file>.html'` to `data/vibeCodingData.js`, which feeds `pages/vibe-coding.js`; `components/ProjectCard.js` then renders a game-controller icon and makes the card image a new-tab link. Each also needs a screenshot at `public/static/images/projectCards/`.
 
+A prototype with its own assets (scripts, workers, `.wasm`) can instead be a **folder** with an `index.html` — e.g. `public/prototypes/chess-analyzer/` (Stockfish in a Web Worker). Its `play` path must name the file, `/prototypes/<folder>/index.html`: Next.js does not serve `index.html` for a bare directory URL, and the page's relative asset paths only resolve from that location. Stockfish's worker and WebAssembly run under the existing CSP (`script-src 'self' 'unsafe-eval'`); it's the Google Fonts it loads that required adding `fonts.googleapis.com` / `fonts.gstatic.com` to `style-src` / `font-src`.
+
 Prototypes are deliberately kept **out of `data/projectsData.js`** so they stay off `/projects` and the home page's "Recent Projects" block, which both read that array. The two files use the same object shape and the same `ProjectCard`, so an entry can be moved between them unchanged.
 
 A prototype that loads anything from a CDN needs that domain added to the CSP in `next.config.js` — the header applies to `/(.*)`, which includes static files under `public/`.
