@@ -5,7 +5,7 @@ const vibeCodingData = [
     title: 'PGN Replay Board | Playable Prototype',
     description:
       'A browser chess replay board built with HTML5 and JavaScript. Paste or upload a PGN to replay games with animated moves and sound, then run a Stockfish game review that flags best moves, inaccuracies, mistakes and blunders with an eval bar and arrows. Hit the play button to run it right in your browser.',
-    imgSrc: '/static/images/projectCards/chess_analyzer.png',
+    imgSrc: '/static/images/projectCards/chess_board_analyzer.png',
     play: '/prototypes/chess-analyzer/index.html',
     tools: ['HTML5', 'JavaScript', 'Stockfish', 'WebAssembly', 'Chess', 'Prototype', 'Web'],
   },
