@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Personal site/blog for Saad Tahir (saadtahir.com), forked from [tailwind-nextjs-starter-blog](https://github.com/timlrx/tailwind-nextjs-starter-blog). Next.js 12 **pages router**, JavaScript (no TypeScript), Tailwind 3, content stored as Markdown/MDX files on disk. Deployed on Vercel. Node 20.x.
+Personal site/blog for Saad Tahir (saadtahir.com), forked from [tailwind-nextjs-starter-blog](https://github.com/timlrx/tailwind-nextjs-starter-blog). Next.js 12 **pages router**, JavaScript (no TypeScript), Tailwind 3, content stored as Markdown/MDX files on disk. Deployed on Vercel. Node 24.x.
 
 ## Working agreement
 

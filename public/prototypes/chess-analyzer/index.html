@@ -199,16 +199,7 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
 
 <script src="chess.js"></script>
 <script>
-const SAMPLE = `[Event "Live Chess"]
-[Site "Chess.com"]
-[Date "2026.10.10"]
-[White "gogo38450"]
-[Black "Velocity7"]
-[Result "0-1"]
-[TimeControl "180+2"]
-[WhiteElo "446"]
-[BlackElo "472"]
-[Termination "Velocity7 won on time"]
+const SAMPLE = `[Result "0-1"]
 
 1. e3 Nf6 2. d4 d6 3. Nc3 g6 4. e4 e6 5. Qe2 Bg7 6. d5 e5 7. Bg5 O-O 8. Qb5 Bd7
 9. Qxb7 Nc6 10. dxc6 Be6 11. Nf3 Qe7 12. Nd2 Rab8 13. Qxa7 Ra8 14. Qb7 Rfb8 15.
@@ -257,7 +248,7 @@ function loadGame(text){
   S = {...p, evals:new Array(n).fill(null), second:new Array(n).fill(null), best:new Array(n).fill(null), cls:{}, reviewed:false};
   idx = 0;
   const h = p.headers;
-  $("gameMeta").textContent = [h.White && h.Black ? `${h.White} vs ${h.Black}` : null, h.TimeControl ? fmtTC(h.TimeControl) : null,
+  $("gameMeta").textContent = [text === SAMPLE ? "Sample game" : h.White && h.Black ? `${h.White} vs ${h.Black}` : null, h.TimeControl ? fmtTC(h.TimeControl) : null,
     h.Date && h.Date.indexOf("?")<0 ? h.Date.replace(/\./g,"-") : null, h.Termination || h.Result].filter(Boolean).join(" · ");
   setReviewBtn("Review game", 0, false);
   buildMoveList(); renderCounts();
