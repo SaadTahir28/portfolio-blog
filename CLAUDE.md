@@ -22,7 +22,7 @@ These rules override default behavior and apply to every task in this repo.
 
 Findings confirmed by the user's own testing. Nothing here is assumed — each line was observed on a real run.
 
-_(none recorded yet)_
+- **Chess analyzer, chess.com Android PGNs:** the Android app's "copy PGN" puts the move text directly after the last `[Header]` line with no blank line between them, and writes `Date` as `2026-10-12` rather than `2026.10.12`. The bundled `chess.js` `load_pgn` needs that blank line to split headers from moves, so such a PGN fails to load as-is and loads once one blank line is added. The dash date is harmless. The website's PGN includes the blank line.
 
 ## Commands
 
