@@ -18,7 +18,7 @@
   --eval-white:#f4f1ea; --eval-black:#2a302d;
   --c-great:#2f74c0; --c-best:#2f8a58; --c-excellent:#5c9a2e; --c-good:#7b8f76;
   --c-inacc:#c4930f; --c-mistake:#d4701f; --c-miss:#b4417f; --c-blunder:#c3332e;
-  --arrow-best:#1f8a4c;
+  --arrow-best:#1f8a4c; --arrow-should:#2f74c0;
   --font-ui:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --radius:10px;
@@ -93,12 +93,14 @@ button:disabled{opacity:.5;cursor:default}
 .counts .n{text-align:center;font-family:var(--font-mono);font-weight:600;font-size:1.05rem}
 .ico{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:99px;color:#fff;font-size:.72rem;font-weight:700;padding:0 4px;flex:none}
 .cur{border-top:1px solid var(--line);padding-top:10px;font-size:.9rem;height:2.4em;box-sizing:content-box;overflow:hidden}
-.cur .row{display:flex;align-items:center;gap:8px;height:100%;white-space:nowrap;min-width:0}
+.cur .row{display:flex;align-items:center;gap:16px;height:100%;white-space:nowrap;min-width:0}
 .cur .row b{overflow:hidden;text-overflow:ellipsis}
+.cur .pair{display:flex;align-items:center;gap:6px;min-width:0}
 .cur .muted{color:var(--muted)}
 .cur b{font-family:var(--font-mono)}
 .sw{display:inline-block;width:16px;height:5px;border-radius:3px;vertical-align:middle;margin-right:4px}
 .sw.best{background:var(--arrow-best)}
+.sw.should{background:var(--arrow-should)}
 
 .nav{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .nav button{font-family:var(--font-mono);padding:9px 0;font-size:1rem}
@@ -313,6 +315,8 @@ function drawArrows(){
   boardEl.querySelectorAll(".arrows").forEach(e=>e.remove());
   if(!$("showArrows").checked) return;
   let s = "";
+  const should = shouldHavePlayed();
+  if(should) s += arrowShape(should, "var(--arrow-should)");
   if(S.best[idx]) s += arrowShape(S.best[idx], "var(--arrow-best)");
   if(!s) return;
   const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
@@ -382,10 +386,19 @@ function fmtEvalShort(cp){
 }
 function uciToSan(fen, u){ try{ const c = new Chess(fen); const m = c.move({from:u.slice(0,2), to:u.slice(2,4), promotion:u[4]||"q"}); return m ? m.san : null; }catch(e){ return null; } }
 
+// engine's best move from the previous position, when the move actually played differs from it
+function shouldHavePlayed(){
+  if(idx===0) return null;
+  const bm = S.best[idx-1], m = S.hist[idx-1];
+  return bm && bm.slice(0,4) !== m.from+m.to ? bm : null;
+}
 function renderCur(){
   const bestNow = S.best[idx] ? uciToSan(S.fens[idx], S.best[idx]) : null;
-  $("cur").innerHTML = `<div class="row"><span class="sw best"></span><span class="muted">Best move</span> `
-    + (bestNow ? `<b>${esc(bestNow)}</b>` : `<span class="muted">–</span>`) + `</div>`;
+  const should = shouldHavePlayed(), shouldSan = should ? uciToSan(S.fens[idx-1], should) : null;
+  $("cur").innerHTML = `<div class="row"><span class="pair"><span class="sw best"></span><span class="muted">Best</span> `
+    + (bestNow ? `<b>${esc(bestNow)}</b>` : `<span class="muted">–</span>`) + `</span>`
+    + (shouldSan ? `<span class="pair"><span class="sw should"></span><span class="muted">Missed</span> <b>${esc(shouldSan)}</b></span>` : "")
+    + `</div>`;
 }
 function renderCounts(){
   const h = S.headers || {};
