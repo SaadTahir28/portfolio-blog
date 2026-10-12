@@ -42,8 +42,13 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:
 header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 20px}
 h1{font-size:1.45rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
 .sub{color:var(--muted);margin:0;font-size:.9rem}
-.howto{color:var(--muted);font-size:.88rem;line-height:1.6;margin-top:-6px}
+/* "i" next to the title opens a small card with how to copy a PGN */
+.title{position:relative;display:flex;align-items:center;gap:8px}
+.info{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border-radius:50%;border:1.5px solid var(--muted);background:none;color:var(--muted);font:italic 700 .78rem/1 Georgia,"Times New Roman",serif;flex:none}
+.info:hover,.info[aria-expanded="true"]{color:var(--ink);border-color:var(--ink)}
+.howto{position:absolute;top:calc(100% + 8px);left:0;z-index:20;width:min(340px, calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.18);padding:12px 14px;color:var(--muted);font-size:.88rem;line-height:1.55}
 .howto p{margin:0}
+.howto p + p{margin-top:6px}
 .howto b{color:var(--ink);font-weight:600}
 .linkbtn{border:0;background:none;padding:0;font:inherit;font-size:inherit;font-weight:600;color:var(--accent);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .main{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,390px);gap:22px;align-items:start}
@@ -149,15 +154,18 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
 
 <div class="wrap" id="app" tabindex="-1">
   <header>
-    <h1>PGN Replay Board</h1>
+    <div class="title">
+      <h1>PGN Replay Board</h1>
+      <button class="info" id="infoBtn" aria-expanded="false" aria-controls="howto" aria-label="How to load your own game" title="How to load your own game">i</button>
+      <div class="howto" id="howto" role="dialog" aria-label="How to load your own game" hidden>
+        <p><b>Analyse your own game</b></p>
+        <p><b>Chess.com:</b> open the game → <b>Share</b> under the board → <b>PGN</b> tab → <b>Copy PGN</b>.</p>
+        <p><b>Lichess:</b> open the game → <b>Share &amp; export</b> → copy the PGN text.</p>
+        <p>Then open <button class="linkbtn" id="howLoad">Load game</button>, paste it and click <b>Load game</b>.</p>
+      </div>
+    </div>
     <p class="sub" id="gameMeta">Loading game…</p>
   </header>
-  <section class="howto" aria-label="How to load your own game">
-    <p><b>Analyse your own game:</b></p>
-    <p><b>Chess.com:</b> open the game → click <b>Share</b> under the board → <b>PGN</b> tab → <b>Copy PGN</b>.</p>
-    <p><b>Lichess:</b> open the game → <b>Share &amp; export</b> → copy the PGN text.</p>
-    <p>Then open <button class="linkbtn" id="howLoad">Load game</button> below, paste it and click <b>Load game</b>.</p>
-  </section>
 
   <div class="main">
     <div class="left">
@@ -671,6 +679,7 @@ $("showArrows").onchange = ()=>drawArrows();
 document.addEventListener("keydown", e=>{
   if(/TEXTAREA|SELECT|INPUT/.test(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key;
+  if(k==="Escape" && !$("howto").hidden){ e.preventDefault(); showHowto(false); $("infoBtn").focus(); return; }
   if(k==="ArrowRight"){ e.preventDefault(); stopPlay(); goTo(cursor()+1,true); }
   else if(k==="ArrowLeft"){ e.preventDefault(); stopPlay(); goTo(cursor()-1,false); }
   else if(k==="ArrowUp" || k==="Home"){ e.preventDefault(); stopPlay(); goTo(0,false); }
@@ -689,7 +698,14 @@ $("loadBtn").onclick = ()=>{
   else { err.textContent = "That PGN couldn't be read. Copy the full text from the site's PGN tab, including the moves."; err.hidden = false; }
 };
 $("sampleBtn").onclick = ()=>{ loadGame(SAMPLE); $("loadErr").hidden = true; $("loadBox").open = false; playStartSound(); };
-$("howLoad").onclick = ()=>{ $("loadBox").open = true; $("pgnInput").focus(); };
+$("howLoad").onclick = ()=>{ showHowto(false); $("loadBox").open = true; $("pgnInput").focus(); };
+function showHowto(open){ $("howto").hidden = !open; $("infoBtn").setAttribute("aria-expanded", open); }
+$("infoBtn").onclick = ()=>showHowto($("howto").hidden);
+// a click outside the card only closes it, so it can't also select a piece on the board
+document.addEventListener("click", e=>{
+  if($("howto").hidden || e.target.closest("#howto, #infoBtn")) return;
+  e.stopPropagation(); e.preventDefault(); showHowto(false);
+}, true);
 
 /* ---------- engine & review ---------- */
 const MATE_CP = 1000;
