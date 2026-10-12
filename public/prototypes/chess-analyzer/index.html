@@ -42,6 +42,10 @@ body{background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:
 header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 20px}
 h1{font-size:1.45rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
 .sub{color:var(--muted);margin:0;font-size:.9rem}
+.howto{color:var(--muted);font-size:.88rem;line-height:1.6;margin-top:-6px}
+.howto p{margin:0}
+.howto b{color:var(--ink);font-weight:600}
+.linkbtn{border:0;background:none;padding:0;font:inherit;font-size:inherit;font-weight:600;color:var(--accent);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .main{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,390px);gap:22px;align-items:start}
 @media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
 .credits{border-top:1px solid var(--line);padding-top:10px;color:var(--muted);font-size:.78rem;line-height:1.5}
@@ -50,7 +54,7 @@ h1{font-size:1.45rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
 
 /* ---- left: board ---- */
 .left{display:flex;flex-direction:column;gap:8px;min-width:0;max-width:700px;width:100%}
-.player{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;font-size:.95rem}
+.player{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;font-size:.95rem;min-height:30px}
 .player .elo{font-family:var(--font-mono);color:var(--muted);font-weight:400;font-size:.85rem}
 .player .tag{font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--surface);color:var(--muted);border:1px solid var(--line)}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;border:1px solid var(--muted);vertical-align:middle}
@@ -75,6 +79,19 @@ h1{font-size:1.45rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
 .mark{position:absolute;width:12.5%;height:12.5%;z-index:6;pointer-events:none;display:flex;justify-content:flex-end;align-items:flex-start;padding:1.5%}
 .mark span{font-family:var(--font-ui);font-weight:700;font-size:2.5cqw;color:#fff;min-width:4.2cqw;height:4.2cqw;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 .8cqw;box-shadow:0 1px 3px rgba(0,0,0,.4)}
 .arrows{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}
+/* moving pieces yourself: selected square, legal-move dots, and a short notice */
+.board{cursor:pointer}
+.sq.sel::after{content:"";position:absolute;inset:0;background:rgba(236,196,64,.8)}
+.tgt{position:absolute;width:12.5%;height:12.5%;z-index:4;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.tgt::after{content:"";width:30%;height:30%;border-radius:50%;background:rgba(20,30,25,.38)}
+.tgt.cap::after{width:88%;height:88%;background:none;border:.9cqw solid rgba(20,30,25,.38);box-sizing:border-box}
+.toast{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);z-index:7;pointer-events:none;background:rgba(15,20,18,.88);color:#fff;font-size:.85rem;font-weight:600;padding:6px 12px;border-radius:8px;white-space:nowrap}
+.branchbar{display:none;align-items:center;justify-content:space-between;gap:8px;min-height:30px;font-size:.9rem;color:var(--muted)}
+.branchbar b{color:var(--ink)}
+.branchbar button{padding:3px 10px;font-size:.82rem;flex:none}
+.in-branch .branchbar{display:flex}
+.in-branch #topPlayer{display:none}
+.in-branch .moves{opacity:.45}
 
 /* ---- right: side panel ---- */
 .side{display:flex;flex-direction:column;gap:14px;min-width:0}
@@ -135,6 +152,12 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
     <h1>PGN Replay Board</h1>
     <p class="sub" id="gameMeta">Loading game…</p>
   </header>
+  <section class="howto" aria-label="How to load your own game">
+    <p><b>Analyse your own game:</b></p>
+    <p><b>Chess.com:</b> open the game → click <b>Share</b> under the board → <b>PGN</b> tab → <b>Copy PGN</b>.</p>
+    <p><b>Lichess:</b> open the game → <b>Share &amp; export</b> → copy the PGN text.</p>
+    <p>Then open <button class="linkbtn" id="howLoad">Load game</button> below, paste it and click <b>Load game</b>.</p>
+  </section>
 
   <div class="main">
     <div class="left">
@@ -147,6 +170,7 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
           <span class="err" id="loadErr" hidden></span>
         </div>
       </details>
+      <div class="branchbar" id="branchBar"><span><b>Your moves</b> · <span id="branchFrom"></span> <span id="branchStatus"></span></span><button id="branchExit">✕ Back to game</button></div>
       <div class="player" id="topPlayer"></div>
       <div class="boardwrap">
         <div class="evalv" id="evalv" title="Evaluation"><i id="evalFill"></i><b id="evalTxt"></b></div>
@@ -232,10 +256,16 @@ const boardEl = $("board");
 
 let S = {};
 let flipped = false, idx = 0, playTimer = null, animTimer = null;
+// B = moves you play yourself from game position B.start, same shape as S plus its own cursor k; null while viewing the game
+let B = null, sel = null, liveTok = 0;
+const D = () => B || S;              // the data the board is showing
+const at = () => B ? B.k : idx;      // the position index within it
 
 function parseGame(text){
   const g = new Chess();
-  if(!g.load_pgn(text.trim().replace(/\r/g,""), {sloppy:true})) return null;
+  // chess.js needs a blank line between the headers and the moves; the chess.com Android app leaves it out
+  const pgn = text.trim().replace(/\r/g,"").replace(/^(\[[^\]\n]*\]\n)(?!\s*\[)(?!\n)/m, "$1\n");
+  if(!g.load_pgn(pgn, {sloppy:true})) return null;
   const headers = g.header(), hist = g.history({verbose:true});
   if(!hist.length) return null;
   const c = new Chess(); if(headers.FEN) c.load(headers.FEN);
@@ -245,7 +275,7 @@ function parseGame(text){
 }
 function loadGame(text){
   const p = parseGame(text); if(!p) return false;
-  stopPlay(); cancelReview();
+  stopPlay(); cancelReview(); exitBranch(true);
   const n = p.fens.length;
   S = {...p, evals:new Array(n).fill(null), second:new Array(n).fill(null), best:new Array(n).fill(null), cls:{}, reviewed:false};
   idx = 0;
@@ -279,6 +309,7 @@ function drawSquares(){
 }
 function drawPieces(fen){
   boardEl.querySelectorAll(".pc,.mark,.arrows").forEach(e=>e.remove());
+  clearSel();
   const b = new Chess(fen).board();
   for(let i=0;i<8;i++) for(let j=0;j<8;j++){
     const cell = b[i][j]; if(!cell) continue;
@@ -292,10 +323,11 @@ function drawHighlights(){
   boardEl.querySelectorAll(".sq.hl").forEach(e=>e.classList.remove("hl"));
   boardEl.querySelectorAll(".mark").forEach(e=>e.remove());
   drawArrows();
-  if(idx===0) return;
-  const m = S.hist[idx-1];
+  const d = D(), i = at();
+  if(i===0) return;
+  const m = d.hist[i-1];
   [m.from, m.to].forEach(sq => boardEl.querySelector(`.sq[data-sq="${sq}"]`).classList.add("hl"));
-  const c = S.cls[idx];
+  const c = d.cls[i];
   if(c && CAT[c].glyph){
     const mk = document.createElement("div"); mk.className = "mark"; pos(mk, m.to);
     const s = document.createElement("span"); s.textContent = CAT[c].glyph; s.style.background = `var(--c-${c})`;
@@ -317,7 +349,8 @@ function drawArrows(){
   let s = "";
   const should = shouldHavePlayed();
   if(should) s += arrowShape(should, "var(--arrow-should)");
-  if(S.best[idx]) s += arrowShape(S.best[idx], "var(--arrow-best)");
+  const d = D(), i = at();
+  if(d.best[i]) s += arrowShape(d.best[i], "var(--arrow-best)");
   if(!s) return;
   const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
   svg.setAttribute("viewBox","0 0 800 800"); svg.setAttribute("class","arrows"); svg.setAttribute("aria-hidden","true");
@@ -326,12 +359,20 @@ function drawArrows(){
 function go(i, animate){
   if(!S.fens) return;
   i = Math.max(0, Math.min(S.fens.length-1, i));
-  if(i===idx+1) playMoveSound(i, false); else if(i===idx-1) playMoveSound(idx, true);
+  if(i===idx+1) playMoveSound(S.hist[i-1], false, i===S.hist.length); else if(i===idx-1) playMoveSound(S.hist[idx-1], true);
   clearTimeout(animTimer);
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if(animate && i === idx+1 && !reduce){
-    drawPieces(S.fens[idx]);
-    const m = S.hist[idx];
+  if(animate && i === idx+1 && !reducedMotion()){
+    animateMove(S.fens[idx], S.hist[idx]);
+    idx = i; updateUI(false);
+    animTimer = setTimeout(()=>{ drawPieces(S.fens[idx]); drawHighlights(); }, 260);
+  } else {
+    idx = i; drawPieces(S.fens[idx]); updateUI(true);
+  }
+}
+function reducedMotion(){ return matchMedia("(prefers-reduced-motion: reduce)").matches; }
+// draws the position before move m, then slides the moved piece (and castling rook) to its new square
+function animateMove(fenBefore, m){
+    drawPieces(fenBefore);
     const cap = boardEl.querySelector(`.pc[data-sq="${m.to}"]`); if(cap) cap.classList.add("gone");
     if(m.flags.includes("e")){ const ep = boardEl.querySelector(`.pc[data-sq="${m.to[0]+m.from[1]}"]`); if(ep) ep.classList.add("gone"); }
     const mover = boardEl.querySelector(`.pc[data-sq="${m.from}"]`);
@@ -343,11 +384,6 @@ function go(i, animate){
         if(rook) pos(rook, (ks?"f":"d")+r);
       }
     });
-    idx = i; updateUI(false);
-    animTimer = setTimeout(()=>{ drawPieces(S.fens[idx]); drawHighlights(); }, 260);
-  } else {
-    idx = i; drawPieces(S.fens[idx]); updateUI(true);
-  }
 }
 function updateUI(withHl){
   if(withHl) drawHighlights(); else boardEl.querySelectorAll(".sq.hl").forEach(e=>e.classList.remove("hl"));
@@ -363,12 +399,12 @@ function updateUI(withHl){
   const box = $("moves");
   if(cur){ cur.classList.add("on"); const t = cur.offsetTop - box.offsetTop; if(t < box.scrollTop || t > box.scrollTop + box.clientHeight - 40) box.scrollTop = t - box.clientHeight/2; }
   else if(idx===0) box.scrollTop = 0;
-  drawEval(); renderCur();
-  $("bPrev").disabled = $("bStart").disabled = idx===0;
-  $("bNext").disabled = $("bEnd").disabled = idx===S.fens.length-1;
+  drawEval(); renderCur(); renderBranchBar();
+  $("bPrev").disabled = $("bStart").disabled = cursor()===0;
+  $("bNext").disabled = $("bEnd").disabled = cursor()===lastPos();
 }
 function drawEval(){
-  const e = S.evals[idx];
+  const e = D().evals[at()];
   const pct = e==null ? 50 : winPct(e);
   $("evalFill").style.height = pct + "%";
   const t = $("evalTxt");
@@ -388,18 +424,120 @@ function uciToSan(fen, u){ try{ const c = new Chess(fen); const m = c.move({from
 
 // engine's best move from the previous position, when the move actually played differs from it
 function shouldHavePlayed(){
-  if(idx===0) return null;
-  const bm = S.best[idx-1], m = S.hist[idx-1];
+  const d = D(), i = at();
+  if(i===0) return null;
+  const bm = d.best[i-1], m = d.hist[i-1];
   return bm && bm.slice(0,4) !== m.from+m.to ? bm : null;
 }
 function renderCur(){
-  const bestNow = S.best[idx] ? uciToSan(S.fens[idx], S.best[idx]) : null;
-  const should = shouldHavePlayed(), shouldSan = should ? uciToSan(S.fens[idx-1], should) : null;
+  const d = D(), i = at();
+  const bestNow = d.best[i] ? uciToSan(d.fens[i], d.best[i]) : null;
+  const should = shouldHavePlayed(), shouldSan = should ? uciToSan(d.fens[i-1], should) : null;
   $("cur").innerHTML = `<div class="row"><span class="pair"><span class="sw best"></span><span class="muted">Best</span> `
     + (bestNow ? `<b>${esc(bestNow)}</b>` : `<span class="muted">–</span>`) + `</span>`
     + (shouldSan ? `<span class="pair"><span class="sw should"></span><span class="muted">Missed</span> <b>${esc(shouldSan)}</b></span>` : "")
     + `</div>`;
 }
+/* ---------- your moves: click a piece, then a square; Stockfish analyses each new position ---------- */
+function squareAt(ev){
+  const b = boardEl.getBoundingClientRect();
+  const x = Math.floor((ev.clientX-b.left)/b.width*8), y = Math.floor((ev.clientY-b.top)/b.height*8);
+  if(x<0 || x>7 || y<0 || y>7) return null;
+  const f = flipped ? 7-x : x, r = flipped ? y : 7-y;
+  return String.fromCharCode(97+f) + (r+1);
+}
+function clearSel(){
+  sel = null;
+  boardEl.querySelectorAll(".tgt").forEach(e=>e.remove());
+  boardEl.querySelectorAll(".sq.sel").forEach(e=>e.classList.remove("sel"));
+}
+function selectSq(sq, moves){
+  clearSel(); sel = sq;
+  boardEl.querySelector(`.sq[data-sq="${sq}"]`).classList.add("sel");
+  for(const m of moves){
+    const t = document.createElement("div"); t.className = "tgt" + (m.captured ? " cap" : ""); pos(t, m.to); boardEl.appendChild(t);
+  }
+}
+let toastTimer = null;
+function toast(msg){
+  boardEl.querySelectorAll(".toast").forEach(e=>e.remove()); clearTimeout(toastTimer);
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; boardEl.appendChild(t);
+  toastTimer = setTimeout(()=>t.remove(), 1800);
+}
+boardEl.addEventListener("click", ev=>{
+  if(!S.fens) return;
+  const sq = squareAt(ev); if(!sq) return;
+  if(reviewJob){ toast("Wait for the review to finish"); return; }
+  stopPlay();
+  const c = new Chess(D().fens[at()]);
+  if(sel){
+    const mv = c.moves({square:sel, verbose:true}).find(m=>m.to===sq);
+    if(mv){ playUserMove({from:sel, to:sq, promotion:"q"}); return; }
+  }
+  const p = c.get(sq);
+  if(p && p.color===c.turn() && sq!==sel) selectSq(sq, c.moves({square:sq, verbose:true}));
+  else clearSel();
+});
+function playUserMove(mv){
+  if(!B){
+    // start your line from the game position on the board, reusing its review if there is one
+    B = {start:idx, fens:[S.fens[idx]], hist:[], evals:[S.evals[idx]], second:[S.second[idx]], best:[S.best[idx]], cls:{}, k:0};
+    $("app").classList.add("in-branch");
+  }
+  // playing from an earlier point replaces the moves after it
+  B.fens.length = B.k+1; B.hist.length = B.k; B.evals.length = B.second.length = B.best.length = B.k+1;
+  for(const j in B.cls) if(+j > B.k) delete B.cls[j];
+  const c = new Chess(B.fens[B.k]), m = c.move(mv); if(!m) return;
+  B.hist.push(m); B.fens.push(c.fen()); B.evals.push(null); B.second.push(null); B.best.push(null);
+  goBranch(B.k+1, true);
+}
+function goBranch(k, animate){
+  k = Math.max(0, Math.min(B.hist.length, k));
+  if(k===B.k+1) playMoveSound(B.hist[k-1], false, false); else if(k===B.k-1) playMoveSound(B.hist[B.k-1], true);
+  clearTimeout(animTimer);
+  if(animate && k===B.k+1 && !reducedMotion()){
+    animateMove(B.fens[B.k], B.hist[B.k]);
+    B.k = k; updateUI(false);
+    animTimer = setTimeout(()=>{ if(B){ drawPieces(B.fens[B.k]); drawHighlights(); } }, 260);
+  } else {
+    B.k = k; drawPieces(B.fens[k]); updateUI(true);
+  }
+  // also covers stepping back onto a position whose analysis was cut short by a quick next move
+  if(B.evals[k]==null || (k>0 && B.evals[k-1]==null)) analyseBranch();
+}
+function exitBranch(quiet){
+  if(!B) return;
+  B = null; liveTok++; stopPlay(); clearTimeout(animTimer);
+  if(pending && !reviewJob && engine) engine.postMessage("stop");   // its result is dropped: liveTok moved on
+  $("app").classList.remove("in-branch");
+  if(!quiet){ drawPieces(S.fens[idx]); updateUI(true); }
+}
+function renderBranchBar(status){
+  if(!B) return;
+  const m = S.hist[B.start-1];
+  $("branchFrom").textContent = m ? `from ${Math.ceil(B.start/2)}${m.color==="w" ? "." : "…"} ${m.san}` : "from the start";
+  if(status !== undefined) $("branchStatus").textContent = status;
+}
+// evaluates the position on the board and the one before it (needed for Missed and the move rating)
+async function analyseBranch(){
+  const tok = ++liveTok, b = B;
+  renderBranchBar("· analysing…");
+  try{ await startEngine(); }
+  catch(e){ if(tok===liveTok) renderBranchBar("· engine couldn't start"); return; }
+  if(tok!==liveTok) return;
+  if(pending){ engine.postMessage("stop"); await engineSync(); if(tok!==liveTok) return; }
+  for(const i of [b.k-1, b.k]){
+    if(i<0 || b.evals[i]!=null) continue;
+    const r = await evalPosition(b.fens[i], REVIEW_DEPTH);
+    if(tok!==liveTok) return;
+    b.evals[i] = r.cp; b.second[i] = r.cp2; b.best[i] = r.best;
+    for(const j of [i, i+1]) if(j>0 && j<b.fens.length && b.evals[j-1]!=null && b.evals[j]!=null) classify(b, j);
+    drawHighlights(); drawEval(); renderCur();
+  }
+  renderBranchBar("");
+}
+$("branchExit").onclick = ()=>exitBranch();
+
 function renderCounts(){
   const h = S.headers || {};
   const cnt = {w:{}, b:{}};
@@ -423,7 +561,7 @@ function buildMoveList(){
     }
     const b = document.createElement("button"); b.className="mv"; b.dataset.i = i;
     b.innerHTML = `<span>${esc(m.san)}</span><span class="b" data-badge></span>`;
-    b.addEventListener("click", ()=>{ stopPlay(); go(i, i===idx+1); });
+    b.addEventListener("click", ()=>{ stopPlay(); exitBranch(); go(i, i===idx+1); });
     box.appendChild(b);
   }
 }
@@ -477,9 +615,9 @@ function snd(name, t, gain=1){
   s.connect(g); g.connect(c.destination); s.start(t || c.currentTime);
   return true;
 }
-function playMoveSound(i, soft){
-  if(!soundOn) return;
-  const m = S.hist && S.hist[i-1]; if(!m) return;
+// m = the move being played (or undone, when soft); isLast plays the game-end sound after it
+function playMoveSound(m, soft, isLast){
+  if(!soundOn || !m) return;
   const c = ac(); if(!c) return;
   loadSounds();
   const t = c.currentTime + .01;
@@ -491,7 +629,7 @@ function playMoveSound(i, soft){
   else if(m.flags.includes("k") || m.flags.includes("q")) name = "castle";
   else if(m.flags.includes("c") || m.flags.includes("e")) name = sndBuf.capture ? "capture" : mv;
   if(!snd(name, t)) click(c, t);
-  if(i === S.hist.length && S.headers.Result && S.headers.Result !== "*") snd("end", t + .3);
+  if(isLast && S.headers.Result && S.headers.Result !== "*") snd("end", t + .3);
 }
 function playStartSound(){
   if(!soundOn) return;
@@ -508,31 +646,36 @@ $("bSound").onclick = ()=>{ setSound(!soundOn); if(soundOn){ const c = ac(); if(
 setSound(soundOn);
 
 /* ---------- playback & keys ---------- */
+// the nav buttons, keys and playback step through your moves while you have some, the game otherwise
+function cursor(){ return B ? B.k : idx; }
+function lastPos(){ return B ? B.hist.length : S.fens.length-1; }
+function goTo(i, animate){ B ? goBranch(i, animate) : go(i, animate); }
 function togglePlay(){ playTimer ? stopPlay() : startPlay(); }
 function startPlay(){
-  if(idx>=S.fens.length-1) go(0,false);
-  const fromStart = idx===0;
+  if(cursor()>=lastPos()) goTo(0,false);
+  const fromStart = !B && idx===0;
   if(fromStart) playStartSound();
   $("bPlay").textContent = "❚❚"; $("bPlay").setAttribute("aria-label","Pause");
-  const tick = ()=>{ if(idx>=S.fens.length-1){ stopPlay(); return; } go(idx+1, true); playTimer = setTimeout(tick, +$("speed").value); };
+  const tick = ()=>{ if(cursor()>=lastPos()){ stopPlay(); return; } goTo(cursor()+1, true); playTimer = setTimeout(tick, +$("speed").value); };
   playTimer = setTimeout(tick, fromStart ? 600 : 250);
 }
 function stopPlay(){ clearTimeout(playTimer); playTimer = null; $("bPlay").textContent = "▶"; $("bPlay").setAttribute("aria-label","Play"); }
 
-$("bStart").onclick = ()=>{ stopPlay(); go(0,false); };
-$("bPrev").onclick  = ()=>{ stopPlay(); go(idx-1,false); };
-$("bNext").onclick  = ()=>{ stopPlay(); go(idx+1,true); };
-$("bEnd").onclick   = ()=>{ stopPlay(); go(S.fens.length-1,false); };
+$("bStart").onclick = ()=>{ stopPlay(); goTo(0,false); };
+$("bPrev").onclick  = ()=>{ stopPlay(); goTo(cursor()-1,false); };
+$("bNext").onclick  = ()=>{ stopPlay(); goTo(cursor()+1,true); };
+$("bEnd").onclick   = ()=>{ stopPlay(); goTo(lastPos(),false); };
 $("bPlay").onclick  = togglePlay;
-$("bFlip").onclick  = ()=>{ flipped = !flipped; drawSquares(); drawPieces(S.fens[idx]); updateUI(true); };
+$("bFlip").onclick  = ()=>{ flipped = !flipped; drawSquares(); drawPieces(D().fens[at()]); updateUI(true); };
 $("showArrows").onchange = ()=>drawArrows();
 document.addEventListener("keydown", e=>{
   if(/TEXTAREA|SELECT|INPUT/.test(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key;
-  if(k==="ArrowRight"){ e.preventDefault(); stopPlay(); go(idx+1,true); }
-  else if(k==="ArrowLeft"){ e.preventDefault(); stopPlay(); go(idx-1,false); }
-  else if(k==="ArrowUp" || k==="Home"){ e.preventDefault(); stopPlay(); go(0,false); }
-  else if(k==="ArrowDown" || k==="End"){ e.preventDefault(); stopPlay(); go(S.fens.length-1,false); }
+  if(k==="ArrowRight"){ e.preventDefault(); stopPlay(); goTo(cursor()+1,true); }
+  else if(k==="ArrowLeft"){ e.preventDefault(); stopPlay(); goTo(cursor()-1,false); }
+  else if(k==="ArrowUp" || k==="Home"){ e.preventDefault(); stopPlay(); goTo(0,false); }
+  else if(k==="ArrowDown" || k==="End"){ e.preventDefault(); stopPlay(); goTo(lastPos(),false); }
+  else if(k==="Escape" && (B || sel)){ e.preventDefault(); B ? exitBranch() : clearSel(); }
   else if(k===" " && e.target.tagName!=="BUTTON"){ e.preventDefault(); togglePlay(); }
 });
 // keep keyboard focus on the page so the arrow keys work right after clicking the board
@@ -546,12 +689,19 @@ $("loadBtn").onclick = ()=>{
   else { err.textContent = "That PGN couldn't be read. Copy the full text from the site's PGN tab, including the moves."; err.hidden = false; }
 };
 $("sampleBtn").onclick = ()=>{ loadGame(SAMPLE); $("loadErr").hidden = true; $("loadBox").open = false; playStartSound(); };
+$("howLoad").onclick = ()=>{ $("loadBox").open = true; $("pgnInput").focus(); };
 
 /* ---------- engine & review ---------- */
 const MATE_CP = 1000;
 let engine = null, engineReady = false, pending = null, syncRes = null, reviewJob = null;
 function winPct(cp){ const c = Math.max(-MATE_CP, Math.min(MATE_CP, cp)); return 50 + 50*(2/(1+Math.exp(-0.00368208*c))-1); }
+// one start shared by the review and your moves, so two quick calls don't spawn two workers
+let engineBoot = null;
 function startEngine(){
+  if(!engineBoot) engineBoot = bootEngine().catch(e=>{ engineBoot = null; throw e; });
+  return engineBoot;
+}
+function bootEngine(){
   return new Promise((resolve, reject)=>{
     if(engine && engineReady) return resolve();
     try{
@@ -607,6 +757,7 @@ function setReviewBtn(label, pct, busy){
 }
 async function review(){
   if(reviewJob) return;
+  exitBranch();
   const my = reviewJob = {cancelled:false};
   setReviewBtn("Starting engine…", 0, true); renderCur();
   try{ await startEngine(); }
@@ -621,7 +772,7 @@ async function review(){
     const r = await evalPosition(S.fens[i], REVIEW_DEPTH);
     if(my.cancelled) return;
     S.evals[i] = r.cp; S.second[i] = r.cp2; S.best[i] = r.best;
-    if(i>0){ classify(i); setBadge(i); }
+    if(i>0){ classify(S, i); setBadge(i); }
     const pct = Math.round((i+1)/n*100);
     setReviewBtn(`Reviewing… ${pct}%`, pct, true);
     if(i===idx || i===idx+1){ drawHighlights(); drawEval(); renderCur(); }
@@ -630,18 +781,18 @@ async function review(){
   setReviewBtn("Review complete · Run again", 0, false);
   renderCounts(); drawHighlights(); drawEval(); renderCur();
 }
-function classify(i){
-  const m = S.hist[i-1], before = S.evals[i-1], after = S.evals[i];
+function classify(d, i){
+  const m = d.hist[i-1], before = d.evals[i-1], after = d.evals[i];
   if(before==null || after==null) return;
   const sgn = m.color==="w" ? 1 : -1;
   const wb = winPct(sgn*before), wa = winPct(sgn*after), drop = wb - wa;
-  const bm = S.best[i-1], isBest = bm && bm.slice(0,4) === m.from+m.to;
-  const prevBad = i>1 && ["mistake","blunder","miss"].includes(S.cls[i-1]);
+  const bm = d.best[i-1], isBest = bm && bm.slice(0,4) === m.from+m.to;
+  const prevBad = i>1 && ["mistake","blunder","miss"].includes(d.cls[i-1]);
   let c;
   if(isBest){
     // Great = the only good move: the engine's second choice was much worse
-    const second = S.second[i-1];
-    const recapture = i>1 && S.hist[i-2].captured && m.to === S.hist[i-2].to;
+    const second = d.second[i-1];
+    const recapture = i>1 && d.hist[i-2].captured && m.to === d.hist[i-2].to;
     c = (second!=null && !recapture && wb < 97 && wb - winPct(sgn*second) >= 15) ? "great" : "best";
   }
   else if(drop >= 10 && prevBad && wa >= 35) c = "miss";   // opponent erred, you didn't punish it
@@ -650,7 +801,7 @@ function classify(i){
   else if(drop >= 5)  c = "inacc";
   else if(drop <= 2)  c = "excellent";
   else c = "good";
-  S.cls[i] = c;
+  d.cls[i] = c;
 }
 $("bReview").onclick = review;
 
