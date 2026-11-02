@@ -79,10 +79,7 @@ h1{font-size:1.45rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
 .sq{position:absolute;width:12.5%;height:12.5%}
 .sq.l{background:var(--sq-light)} .sq.d{background:var(--sq-dark)}
 .sq.hl::after{content:"";position:absolute;inset:0;background:var(--sq-hl)}
-.pc{position:absolute;width:12.5%;height:12.5%;display:flex;align-items:center;justify-content:center;font-size:9.6cqw;line-height:1;
-  font-family:"Segoe UI Symbol","DejaVu Sans","Noto Sans Symbols2","Apple Symbols",serif;transition:left .24s ease,top .24s ease,opacity .2s;z-index:2}
-.pc.w{color:#fbf8f0;text-shadow:0 0 1px #111,0 0 1px #111,1px 1px 0 #111,-1px -1px 0 #111,1px -1px 0 #111,-1px 1px 0 #111}
-.pc.b{color:#191d1b;text-shadow:0 0 1px rgba(255,255,255,.35)}
+.pc{position:absolute;width:12.5%;height:12.5%;background:center/contain no-repeat;transition:left .24s ease,top .24s ease,opacity .2s;z-index:2}
 .pc.moving{z-index:3} .pc.gone{opacity:0}
 .mark{position:absolute;width:12.5%;height:12.5%;z-index:6;pointer-events:none;display:flex;justify-content:flex-end;align-items:flex-start;padding:1.5%}
 .mark span{font-family:var(--font-ui);font-weight:700;font-size:2.5cqw;color:#fff;min-width:4.2cqw;height:4.2cqw;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 .8cqw;box-shadow:0 1px 3px rgba(0,0,0,.4)}
@@ -128,9 +125,21 @@ button:disabled{opacity:.5;cursor:default}
 .sw.should{background:var(--arrow-should)}
 
 /* under the board in every layout; sticky keeps it on screen when the board is taller than the window */
-.nav{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;position:sticky;bottom:0;z-index:5;background:var(--bg);padding-block:6px max(6px, env(safe-area-inset-bottom))}
+.nav{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;position:sticky;bottom:0;z-index:5;background:var(--bg);padding-block:6px max(6px, env(safe-area-inset-bottom))}
 .nav button{font-family:var(--font-mono);padding:9px 0;font-size:1rem}
 .nav #bPlay{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.nav svg{display:block;width:1em;height:1em;margin:auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#bFull .ic-exit,.fs #bFull .ic-enter{display:none}
+.fs #bFull .ic-exit{display:block}
+/* Full screen: board, eval bar, player bars and controls only, sized to fit without scrolling.
+   --fs-h = eval bar + rank strip beside the board; --fs-v = everything stacked above and below it */
+body.fs{margin:0;padding:0;height:100vh;height:100dvh;overflow:hidden;
+  --fs-vh:100vh;--fs-h:calc(clamp(16px,3.4vw,26px) + 8px + clamp(18px,3.4vw,26px));--fs-v:calc(172px + clamp(18px,3.4vw,26px))}
+@supports (height:100dvh){body.fs{--fs-vh:100dvh}}
+.fs .wrap{max-width:none;gap:0;padding:8px}
+.fs header,.fs .side,.fs .credits{display:none}
+.fs .main{display:block}
+.fs .left{max-width:none;margin:0 auto;width:min(100%, calc(var(--fs-vh) - var(--fs-v) + var(--fs-h)))}
 .keys{font-size:.8rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px}
 kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--surface-2);color:var(--ink)}
 .opts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -191,6 +200,7 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
         <button id="bPlay" aria-label="Play" title="Play (Space)">▶</button>
         <button id="bNext" aria-label="Next move" title="Forward (→)">→</button>
         <button id="bEnd" aria-label="Go to end" title="End (↓)">⏭</button>
+        <button id="bFull" aria-label="Enter full screen" title="Full screen (F)"><svg class="ic-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="ic-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
       </div>
     </div>
 
@@ -203,7 +213,7 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
       </section>
 
       <section class="panel">
-        <div class="keys"><span><kbd>←</kbd> <kbd>→</kbd> move</span><span><kbd>↑</kbd> <kbd>↓</kbd> start / end</span><span><kbd>Space</kbd> play</span></div>
+        <div class="keys"><span><kbd>←</kbd> <kbd>→</kbd> move</span><span><kbd>↑</kbd> <kbd>↓</kbd> start / end</span><span><kbd>Space</kbd> play</span><span><kbd>F</kbd> full screen</span></div>
         <div class="opts">
           <select id="speed" aria-label="Playback speed">
             <option value="1600">Slow</option>
@@ -233,7 +243,7 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
   </div>
 
   <footer class="credits">
-    Game review powered by <a href="https://github.com/official-stockfish/Stockfish" target="_blank" rel="noopener">Stockfish</a> (GPLv3) via <a href="https://github.com/nmrugg/stockfish.js" target="_blank" rel="noopener">stockfish.js</a> · Move logic by <a href="https://github.com/jhlywa/chess.js" target="_blank" rel="noopener">chess.js</a> (BSD-2)
+    Game review powered by <a href="https://github.com/official-stockfish/Stockfish" target="_blank" rel="noopener">Stockfish</a> (GPLv3) via <a href="https://github.com/nmrugg/stockfish.js" target="_blank" rel="noopener">stockfish.js</a> · Move logic by <a href="https://github.com/jhlywa/chess.js" target="_blank" rel="noopener">chess.js</a> (BSD-2) · Chess pieces by <a href="https://en.wikipedia.org/wiki/User:Cburnett" target="_blank" rel="noopener">Colin M.L. Burnett</a> (GPLv2+)
   </footer>
 </div>
 
@@ -264,7 +274,6 @@ const CAT = {
 const COUNTED = ["great","excellent","miss","blunder"];
 const REVIEW_DEPTH = 12;
 
-const GLYPH = {k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
 const $ = id => document.getElementById(id);
 const boardEl = $("board");
 
@@ -329,7 +338,7 @@ function drawPieces(fen){
     const cell = b[i][j]; if(!cell) continue;
     const sq = String.fromCharCode(97+j)+(8-i);
     const el = document.createElement("div");
-    el.className = "pc "+cell.color; el.dataset.sq = sq; el.textContent = GLYPH[cell.type]+"︎";
+    el.className = "pc"; el.dataset.sq = sq; el.style.backgroundImage = `url(pieces/${cell.color}${cell.type.toUpperCase()}.svg)`;
     pos(el, sq); boardEl.appendChild(el);
   }
 }
@@ -680,6 +689,7 @@ $("bPrev").onclick  = ()=>{ stopPlay(); goTo(cursor()-1,false); };
 $("bNext").onclick  = ()=>{ stopPlay(); goTo(cursor()+1,true); };
 $("bEnd").onclick   = ()=>{ stopPlay(); goTo(lastPos(),false); };
 $("bPlay").onclick  = togglePlay;
+$("bFull").onclick  = toggleFull;
 $("bFlip").onclick  = ()=>{ flipped = !flipped; drawSquares(); drawPieces(D().fens[at()]); updateUI(true); };
 $("showArrows").onchange = ()=>drawArrows();
 document.addEventListener("keydown", e=>{
@@ -691,6 +701,8 @@ document.addEventListener("keydown", e=>{
   else if(k==="ArrowUp" || k==="Home"){ e.preventDefault(); stopPlay(); goTo(0,false); }
   else if(k==="ArrowDown" || k==="End"){ e.preventDefault(); stopPlay(); goTo(lastPos(),false); }
   else if(k==="Escape" && (B || sel)){ e.preventDefault(); B ? exitBranch() : clearSel(); }
+  else if(k==="Escape" && isFull() && !document.fullscreenElement){ e.preventDefault(); toggleFull(); } // windowed fallback has no browser Esc
+  else if(k==="f" || k==="F"){ e.preventDefault(); toggleFull(); }
   else if(k===" " && e.target.tagName!=="BUTTON"){ e.preventDefault(); togglePlay(); }
 });
 // keep keyboard focus on the page so the arrow keys work right after clicking the board
@@ -826,6 +838,29 @@ function classify(d, i){
   d.cls[i] = c;
 }
 $("bReview").onclick = review;
+
+/* ---------- full screen ---------- */
+let fullScrollY = 0;
+const isFull = () => document.body.classList.contains("fs");
+function setFullLayout(on){
+  if(on === isFull()) return;
+  if(on) fullScrollY = scrollY;
+  document.body.classList.toggle("fs", on);
+  const label = on ? "Exit full screen" : "Enter full screen";
+  $("bFull").setAttribute("aria-label", label);
+  $("bFull").title = (on ? "Exit full screen" : "Full screen") + " (F)";
+  if(!on) scrollTo(0, fullScrollY);
+}
+// Where the Fullscreen API is missing or refused (iPhone Safari) the layout still fills the browser window
+function toggleFull(){
+  const on = !isFull();
+  setFullLayout(on);
+  const root = document.documentElement;
+  const p = on ? (root.requestFullscreen && root.requestFullscreen()) : (document.fullscreenElement && document.exitFullscreen());
+  if(p) p.catch(()=>{});
+  $("app").focus({preventScroll:true}); // so Space plays rather than pressing this button again
+}
+document.addEventListener("fullscreenchange", ()=>{ if(!document.fullscreenElement) setFullLayout(false); });
 
 /* ---------- boot ---------- */
 // A game picked on games.html, kept in sessionStorage so a refresh stays on it

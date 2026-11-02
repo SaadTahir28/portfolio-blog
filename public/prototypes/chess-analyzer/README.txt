@@ -6,6 +6,7 @@ Upload the whole folder and keep this structure:
   index.html
   games.html
   chess.js
+  pieces/*.svg               (the 12 chess piece images)
   engine/stockfish.js        (fast WebAssembly engine)
   engine/stockfish.wasm
   engine/stockfish.asm.js    (fallback for old browsers)
@@ -28,5 +29,7 @@ slower engine automatically; to fix, serve .wasm as application/wasm.
 Licenses
 - Stockfish.js: GPLv3 – https://github.com/nmrugg/stockfish.js
 - chess.js: BSD-2 – https://github.com/jhlywa/chess.js
+- Chess pieces: Colin M.L. Burnett (cburnett set), GPLv2+ –
+  https://en.wikipedia.org/wiki/User:Cburnett
 - Sound files: supplied by the site owner. Check you have the rights to
   use them publicly.
