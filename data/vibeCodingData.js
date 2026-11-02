@@ -2,9 +2,9 @@
 // folder's index.html) in public/prototypes. Array order is the display order on /vibe-coding.
 const vibeCodingData = [
   {
-    title: 'PGN Replay Board | Playable Prototype',
+    title: 'Stockfish Chess Analysis | Playable Prototype',
     description:
-      'A browser chess replay board built with HTML5 and JavaScript. Paste or upload a PGN to replay games with animated moves and sound, then run a Stockfish game review that flags best moves, inaccuracies, mistakes and blunders with an eval bar and arrows. Hit the play button to run it right in your browser.',
+      'A browser chess analysis board powered by Stockfish, built with HTML5 and JavaScript. Pick a recent game from a chess.com username or paste a PGN, then run a game review that flags best moves, inaccuracies, mistakes and blunders with an eval bar and arrows, and try your own moves with live analysis. Hit the play button to run it right in your browser.',
     imgSrc: '/static/images/projectCards/chess_board_analyzer.png',
     play: '/prototypes/chess-analyzer/index.html',
     tools: ['HTML5', 'JavaScript', 'Stockfish', 'WebAssembly', 'Chess', 'Prototype', 'Web'],

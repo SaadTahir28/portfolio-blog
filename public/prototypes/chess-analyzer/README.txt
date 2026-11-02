@@ -1,9 +1,10 @@
-PGN Replay Board – website version
-==================================
+Stockfish Chess Analysis – website version
+==========================================
 
 Upload the whole folder and keep this structure:
 
   index.html
+  games.html
   chess.js
   engine/stockfish.js        (fast WebAssembly engine)
   engine/stockfish.wasm

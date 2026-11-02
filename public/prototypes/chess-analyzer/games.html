@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Pick a recent chess.com game to replay and review with Stockfish Chess Analysis.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
+<title>Chess.com Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Same palette as index.html */
+:root{
+  --bg:#edf0ee; --surface:#ffffff; --surface-2:#f4f6f5; --ink:#1c2420; --muted:#5d6a65; --line:#d3dad7;
+  --accent:#2e6b5b; --accent-ink:#ffffff; --win:#2f8a58; --loss:#c3332e;
+  --font-ui:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#151a18; --surface:#1d2421; --surface-2:#242c29; --ink:#e4ebe7; --muted:#9aa8a2; --line:#323c38;
+  --accent:#6fb59f; --accent-ink:#0f1513; --win:#4fbf80; --loss:#ef5d57; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#151a18; --surface:#1d2421; --surface-2:#242c29; --ink:#e4ebe7; --muted:#9aa8a2; --line:#323c38;
+  --accent:#6fb59f; --accent-ink:#0f1513; --win:#4fbf80; --loss:#ef5d57; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:15px;line-height:1.5;margin:0;padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 20px}
+h1{font-size:1.45rem;margin:0;letter-spacing:-.01em}
+a{color:var(--accent);font-weight:600;text-underline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:10px}
+form{display:flex;flex-wrap:wrap;gap:8px}
+label{width:100%;font-size:.86rem;color:var(--muted)}
+input{flex:1 1 180px;min-width:0;padding:8px 10px;font:inherit;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:7px}
+button{padding:8px 14px;font:inherit;font-weight:500;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.status{margin:0;min-height:1.3em;font-size:.86rem;color:var(--muted)}
+.status.err{color:var(--loss)}
+.games{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.game{width:100%;display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 12px;align-items:center;padding:10px 12px;text-align:left;background:var(--surface);border-radius:var(--radius)}
+.res{grid-row:span 2;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;font:600 .82rem var(--font-mono);color:var(--muted);border:1.5px solid currentColor}
+.res.win{color:var(--win)}
+.res.loss{color:var(--loss)}
+.opp{font-weight:600;overflow-wrap:anywhere}
+.rating{font-weight:400;color:var(--muted)}
+.meta{font-size:.82rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Chess.com games</h1>
+    <a href="index.html">Back to board</a>
+  </header>
+
+  <div class="panel">
+    <form id="form">
+      <label for="user">Chess.com username</label>
+      <input id="user" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="40" placeholder="e.g. hikaru">
+      <button class="primary" id="loadBtn" type="submit">Load games</button>
+      <button id="updateBtn" type="button" hidden>Update</button>
+    </form>
+    <p class="status" id="status" role="status"></p>
+  </div>
+
+  <ul class="games" id="games"></ul>
+</div>
+
+<script>
+const API = "https://api.chess.com/pub/player/";
+const MAX_GAMES = 30, MAX_MONTHS = 6;
+const DRAWS = ["agreed","repetition","stalemate","insufficient","50move","timevsinsufficient"];
+const USER_KEY = "pgnChessComUser", PICK_KEY = "pgnPickedGame"; // PICK_KEY is read by index.html on boot
+const $ = id => document.getElementById(id);
+
+let shown = [], shownUser = null;
+
+function setStatus(text, isErr){ $("status").textContent = text; $("status").classList.toggle("err", !!isErr); }
+function setBusy(on){ $("loadBtn").disabled = on; $("updateBtn").disabled = on; }
+
+// no-cache makes the browser ask chess.com again, so Update never gets a stale copy
+async function getJson(url){
+  const r = await fetch(url, {cache:"no-cache"});
+  if(!r.ok){ const e = new Error("HTTP " + r.status); e.status = r.status; throw e; }
+  return r.json();
+}
+
+// Newest month first. The current month can be missing from the archive list even when
+// its own URL works, so it is always added. Requests run one at a time to avoid a 429.
+async function fetchGames(user){
+  const base = API + encodeURIComponent(user) + "/games/";
+  const {archives = []} = await getJson(base + "archives");
+  const now = new Date();
+  const current = base + now.getUTCFullYear() + "/" + String(now.getUTCMonth()+1).padStart(2,"0");
+  const months = archives.includes(current) ? archives.slice() : archives.concat(current);
+  const out = [];
+  for(const url of months.slice(-MAX_MONTHS).reverse()){
+    let data;
+    try{ data = await getJson(url); }
+    catch(e){ if(url === current && e.status === 404) continue; throw e; }
+    // chess.js can only replay standard chess, so variants and Chess960 are left out
+    const games = (data.games || []).filter(g => g.rules === "chess" && g.pgn);
+    out.push(...games.reverse());
+    if(out.length >= MAX_GAMES) break;
+  }
+  return out.slice(0, MAX_GAMES);
+}
+
+function errorText(e, user){
+  if(e.status === 404) return `No chess.com player called "${user}".`;
+  if(e.status === 429) return "Chess.com is limiting requests. Wait a minute and try again.";
+  return "Couldn't reach chess.com. Check your connection and try again.";
+}
+
+function fmtTC(g){
+  if(g.time_class === "daily") return "Daily";
+  const m = String(g.time_control).match(/^(\d+)(?:\+(\d+))?$/);
+  const cls = g.time_class ? g.time_class[0].toUpperCase() + g.time_class.slice(1) : "";
+  if(!m) return cls;
+  const mins = +m[1]/60;
+  return `${cls} ${mins % 1 ? mins.toFixed(1) : mins}+${m[2] || 0}`.trim();
+}
+
+function render(user){
+  const list = $("games");
+  list.textContent = "";
+  for(const g of shown){
+    const asWhite = g.white.username.toLowerCase() === user;
+    const me = asWhite ? g.white : g.black, opp = asWhite ? g.black : g.white;
+    const res = me.result === "win" ? "win" : DRAWS.includes(me.result) ? "draw" : "loss";
+
+    const badge = document.createElement("span");
+    badge.className = "res " + res;
+    badge.textContent = res[0].toUpperCase();
+    badge.setAttribute("aria-label", res);
+    const name = document.createElement("span");
+    name.className = "opp";
+    name.textContent = "vs " + opp.username + " ";
+    const rating = document.createElement("span");
+    rating.className = "rating";
+    rating.textContent = `(${opp.rating})`;
+    name.append(rating);
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.textContent = [`${me.rating} as ${asWhite ? "White" : "Black"}`, fmtTC(g),
+      new Date(g.end_time*1000).toLocaleDateString(undefined, {year:"numeric", month:"short", day:"numeric"})].join(" · ");
+
+    const btn = document.createElement("button");
+    btn.className = "game";
+    btn.type = "button";
+    btn.append(badge, name, meta);
+    btn.onclick = () => openGame(g, user);
+    const li = document.createElement("li");
+    li.append(btn);
+    list.append(li);
+  }
+}
+
+function openGame(g, user){
+  try{ sessionStorage.setItem(PICK_KEY, JSON.stringify({pgn:g.pgn, user})); }
+  catch(e){ setStatus("Your browser blocked the storage needed to open this game.", true); return; }
+  location.href = "index.html";
+}
+
+// isUpdate keeps the current list on failure and reports how many games are new
+async function load(user, isUpdate){
+  setBusy(true);
+  setStatus(isUpdate ? "Checking for new games…" : "Loading games…");
+  try{
+    const games = await fetchGames(user);
+    const known = new Set(shown.map(g => g.uuid));
+    const fresh = games.filter(g => !known.has(g.uuid)).length;
+    shown = games; shownUser = user;
+    render(user);
+    $("updateBtn").hidden = false;
+    try{ localStorage.setItem(USER_KEY, user); }catch(e){}
+    const time = new Date().toLocaleTimeString(undefined, {hour:"numeric", minute:"2-digit"});
+    if(!games.length) setStatus(`No standard games found for "${user}".`);
+    else if(isUpdate) setStatus(`${fresh ? `${fresh} new game${fresh === 1 ? "" : "s"}` : "No new games"} · updated ${time}`);
+    else setStatus(`${games.length} recent game${games.length === 1 ? "" : "s"} · updated ${time}`);
+  }catch(e){
+    if(!isUpdate){ shown = []; shownUser = null; render(user); $("updateBtn").hidden = true; }
+    setStatus(errorText(e, user), true);
+  }
+  setBusy(false);
+}
+
+$("form").onsubmit = e => {
+  e.preventDefault();
+  const user = $("user").value.trim().toLowerCase();
+  if(!user){ setStatus("Enter a chess.com username.", true); return; }
+  load(user, false);
+};
+$("updateBtn").onclick = () => { $("user").value = shownUser; load(shownUser, true); };
+
+let saved = null;
+try{ saved = localStorage.getItem(USER_KEY); }catch(e){}
+if(saved){ $("user").value = saved; load(saved, false); }
+</script>
+
+</body>
+</html>
