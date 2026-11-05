@@ -16,7 +16,7 @@
   --sq-light:#e9dfca; --sq-dark:#8c9c7d; --sq-hl:rgba(236,196,64,.55);
   --coord-bg:#26302c; --coord-fg:#e9dfca;
   --eval-white:#f4f1ea; --eval-black:#2a302d;
-  --c-great:#2f74c0; --c-best:#2f8a58; --c-excellent:#5c9a2e; --c-good:#7b8f76;
+  --c-brilliant:#1a9e96; --c-book:#9a7650; --c-great:#2f74c0; --c-best:#2f8a58; --c-excellent:#5c9a2e; --c-good:#7b8f76;
   --c-inacc:#c4930f; --c-mistake:#d4701f; --c-miss:#b4417f; --c-blunder:#c3332e;
   --arrow-best:#1f8a4c; --arrow-should:#2f74c0;
   --font-ui:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -27,13 +27,13 @@
   --bg:#151a18; --surface:#1d2421; --surface-2:#242c29; --ink:#e4ebe7; --muted:#9aa8a2; --line:#323c38;
   --accent:#6fb59f; --accent-ink:#0f1513; --coord-bg:#d9cfb8; --coord-fg:#1d2421;
   --eval-white:#e8e4da; --eval-black:#0e1210;
-  --c-great:#5e9fe6; --c-best:#4fbf80; --c-excellent:#8cc55a; --c-good:#9fb09a;
+  --c-brilliant:#3cc9c0; --c-book:#c09a6e; --c-great:#5e9fe6; --c-best:#4fbf80; --c-excellent:#8cc55a; --c-good:#9fb09a;
   --c-inacc:#e2b93c; --c-mistake:#ef9348; --c-miss:#e070ad; --c-blunder:#ef5d57; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#151a18; --surface:#1d2421; --surface-2:#242c29; --ink:#e4ebe7; --muted:#9aa8a2; --line:#323c38;
   --accent:#6fb59f; --accent-ink:#0f1513; --coord-bg:#d9cfb8; --coord-fg:#1d2421;
   --eval-white:#e8e4da; --eval-black:#0e1210;
-  --c-great:#5e9fe6; --c-best:#4fbf80; --c-excellent:#8cc55a; --c-good:#9fb09a;
+  --c-brilliant:#3cc9c0; --c-book:#c09a6e; --c-great:#5e9fe6; --c-best:#4fbf80; --c-excellent:#8cc55a; --c-good:#9fb09a;
   --c-inacc:#e2b93c; --c-mistake:#ef9348; --c-miss:#e070ad; --c-blunder:#ef5d57; color-scheme:dark }
 
 *{box-sizing:border-box}
@@ -120,6 +120,10 @@ button:disabled{opacity:.5;cursor:default}
 .cur .pair{display:flex;align-items:center;gap:6px;min-width:0}
 .cur .muted{color:var(--muted)}
 .cur b{font-family:var(--font-mono)}
+.mark span svg,.mv .b svg{width:1.15em;height:1.15em;display:block}
+.mark span svg{color:#fff}
+.opening{font-size:.86rem;color:var(--muted);margin-top:-4px;overflow-wrap:anywhere}
+.opening b{color:var(--ink);font-weight:600}
 .sw{display:inline-block;width:16px;height:5px;border-radius:3px;vertical-align:middle;margin-right:4px}
 .sw.best{background:var(--arrow-best)}
 .sw.should{background:var(--arrow-should)}
@@ -206,6 +210,7 @@ kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);b
         <h2>Game Review</h2>
         <button class="review-btn" id="bReview"><span id="reviewLbl">Review game</span><span class="prog" id="reviewProg"></span></button>
         <div class="counts" id="counts"></div>
+        <div class="opening" id="opening" hidden></div>
         <div class="cur" id="cur"></div>
       </section>
 
@@ -231,7 +236,7 @@ kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);b
   </div>
 
   <footer class="credits">
-    Game review powered by <a href="https://github.com/official-stockfish/Stockfish" target="_blank" rel="noopener">Stockfish</a> (GPLv3) via <a href="https://github.com/nmrugg/stockfish.js" target="_blank" rel="noopener">stockfish.js</a> · Move logic by <a href="https://github.com/jhlywa/chess.js" target="_blank" rel="noopener">chess.js</a> (BSD-2) · Chess pieces by <a href="https://en.wikipedia.org/wiki/User:Cburnett" target="_blank" rel="noopener">Colin M.L. Burnett</a> (GPLv2+)
+    Game review powered by <a href="https://github.com/official-stockfish/Stockfish" target="_blank" rel="noopener">Stockfish</a> (GPLv3) via <a href="https://github.com/nmrugg/stockfish.js" target="_blank" rel="noopener">stockfish.js</a> · Move logic by <a href="https://github.com/jhlywa/chess.js" target="_blank" rel="noopener">chess.js</a> (BSD-2) · Chess pieces by <a href="https://en.wikipedia.org/wiki/User:Cburnett" target="_blank" rel="noopener">Colin M.L. Burnett</a> (GPLv2+) · Openings from <a href="https://github.com/lichess-org/chess-openings" target="_blank" rel="noopener">lichess-org/chess-openings</a> (CC0)
   </footer>
 </div>
 
@@ -250,6 +255,8 @@ Qb2 0-1`;
 
 // Move categories. "counted" ones appear in the review totals.
 const CAT = {
+  brilliant: {label:"Brilliant",  glyph:"!!", counted:true},
+  book:      {label:"Book",       glyph:"",   icon:"book"},
   great:     {label:"Great",      glyph:"!",  counted:true},
   best:      {label:"Best",       glyph:"★"},
   excellent: {label:"Excellent",  glyph:"✓",  counted:true},
@@ -259,7 +266,10 @@ const CAT = {
   miss:      {label:"Miss",       glyph:"✕",  counted:true},
   blunder:   {label:"Blunder",    glyph:"??", counted:true}
 };
-const COUNTED = ["great","excellent","miss","blunder"];
+const COUNTED = ["brilliant","great","excellent","miss","blunder"];
+// open-book icon for Book moves; an SVG so it looks the same on every device
+const BOOK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2 5.5C5 4.3 8.6 4.6 11.2 6.4V20c-2.6-1.6-6.2-1.9-9.2-.8zM22 5.5c-3-1.2-6.6-.9-9.2.9V20c2.6-1.6 6.2-1.9 9.2-.8z"/></svg>';
+function badgeHTML(c){ return CAT[c].icon === "book" ? BOOK_SVG : esc(CAT[c].glyph); }
 const REVIEW_DEPTH = 12;
 
 const $ = id => document.getElementById(id);
@@ -288,7 +298,8 @@ function loadGame(text){
   const p = parseGame(text); if(!p) return false;
   stopPlay(); cancelReview(); exitBranch(true);
   const n = p.fens.length;
-  S = {...p, evals:new Array(n).fill(null), second:new Array(n).fill(null), best:new Array(n).fill(null), lines:new Array(n).fill(null), cls:{}, reviewed:false};
+  S = {...p, evals:new Array(n).fill(null), second:new Array(n).fill(null), best:new Array(n).fill(null), lines:new Array(n).fill(null), cls:{}, reviewed:false, bookPly:0, opening:null};
+  $("opening").hidden = true;
   idx = 0;
   const h = p.headers;
   $("gameMeta").textContent = [text === SAMPLE ? "Sample game" : h.White && h.Black ? `${h.White} vs ${h.Black}` : null, h.TimeControl ? fmtTC(h.TimeControl) : null,
@@ -339,9 +350,9 @@ function drawHighlights(){
   const m = d.hist[i-1];
   [m.from, m.to].forEach(sq => boardEl.querySelector(`.sq[data-sq="${sq}"]`).classList.add("hl"));
   const c = d.cls[i];
-  if(c && CAT[c].glyph){
+  if(c && (CAT[c].glyph || CAT[c].icon)){
     const mk = document.createElement("div"); mk.className = "mark"; pos(mk, m.to);
-    const s = document.createElement("span"); s.textContent = CAT[c].glyph; s.style.background = `var(--c-${c})`;
+    const s = document.createElement("span"); s.innerHTML = badgeHTML(c); s.style.background = `var(--c-${c})`;
     mk.appendChild(s); boardEl.appendChild(mk);
   }
 }
@@ -634,7 +645,7 @@ function renderCounts(){
   const done = S.reviewed;
   let html = `<span></span><span class="h" title="${esc(h.White||"White")}">${esc(h.White||"White")}</span><span class="h" title="${esc(h.Black||"Black")}">${esc(h.Black||"Black")}</span>`;
   for(const k of COUNTED){
-    html += `<span class="cat"><span class="ico" style="background:var(--c-${k})">${CAT[k].glyph}</span>${CAT[k].label}</span>`;
+    html += `<span class="cat"><span class="ico" style="background:var(--c-${k})">${badgeHTML(k)}</span>${CAT[k].label}</span>`;
     html += `<span class="n" style="color:var(--c-${k})">${done ? cnt.w[k] : "–"}</span><span class="n" style="color:var(--c-${k})">${done ? cnt.b[k] : "–"}</span>`;
   }
   $("counts").innerHTML = html;
@@ -656,7 +667,7 @@ function buildMoveList(){
 function setBadge(i){
   const el = document.querySelector(`.mv[data-i="${i}"] [data-badge]`); if(!el) return;
   const c = S.cls[i], show = c && c!=="good" && c!=="excellent";
-  el.textContent = show ? CAT[c].glyph : ""; el.style.color = show ? `var(--c-${c})` : "";
+  el.innerHTML = show ? badgeHTML(c) : ""; el.style.color = show ? `var(--c-${c})` : "";
 }
 
 /* ---------- sound (your uploaded set, embedded) ---------- */
@@ -864,6 +875,8 @@ async function review(){
   if(my.cancelled) return;
   engine.postMessage("ucinewgame");
   S.cls = {}; S.reviewed = false;
+  await markBook();
+  if(my.cancelled) return;
   const n = S.fens.length;
   for(let i=0;i<n;i++){
     if(my.cancelled) return;
@@ -880,6 +893,8 @@ async function review(){
   renderCounts(); drawHighlights(); drawEval(); renderCur();
 }
 function classify(d, i){
+  // game moves still in the opening book are Book, whatever the engine thinks of them
+  if(d === S && i <= S.bookPly){ d.cls[i] = "book"; return; }
   const m = d.hist[i-1], before = d.evals[i-1], after = d.evals[i];
   if(before==null || after==null) return;
   const sgn = m.color==="w" ? 1 : -1;
@@ -899,7 +914,58 @@ function classify(d, i){
   else if(drop >= 5)  c = "inacc";
   else if(drop <= 2)  c = "excellent";
   else c = "good";
+  // Brilliant: a best (or as good as best) move that gives up material, when you weren't already
+  // winning easily and aren't worse after it
+  if((c === "best" || c === "great" || c === "excellent") && wb < 90 && wa >= 50 && sacrifices(d, i)) c = "brilliant";
   d.cls[i] = c;
+}
+const PIECE_VALUE = {p:1, n:3, b:3, r:5, q:9, k:0};
+function materialFor(fen, color){
+  let s = 0;
+  for(const row of new Chess(fen).board()) for(const p of row) if(p) s += (p.color === color ? 1 : -1) * PIECE_VALUE[p.type];
+  return s;
+}
+// After move i, the opponent's best reply and the mover's next move (from the stored engine line),
+// is the mover at least 2 points of material worse off than before the move?
+function sacrifices(d, i){
+  const line = d.lines[i]; if(!line || !line.length) return false;
+  const color = d.hist[i-1].color, c = new Chess(d.fens[i]);
+  for(const u of line.slice(0, 2)) if(!c.move({from:u.slice(0,2), to:u.slice(2,4), promotion:u[4]})) return false;
+  return materialFor(c.fen(), color) - materialFor(d.fens[i-1], color) <= -2;
+}
+
+/* ---------- opening book (book.json, built by scripts/build-opening-book.js) ---------- */
+let bookLoad = null;
+function loadBook(){
+  if(!bookLoad) bookLoad = fetch("book.json").then(r => r.ok ? r.json() : null)
+    .then(j => j ? {positions:new Set(j.positions), names:j.names} : null).catch(() => null);
+  return bookLoad;
+}
+// cyrb53 by bryc (public domain); keep in sync with scripts/build-opening-book.js
+function cyrb53(str){
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for(let i = 0; i < str.length; i++){ const ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+const bookKey = fen => cyrb53(fen.split(" ").slice(0, 4).join(" "));
+// how many opening moves are still book (every one before it too), and the deepest opening name
+async function markBook(){
+  const book = await loadBook(), g = S;
+  g.bookPly = 0; g.opening = null;
+  if(book && !g.headers.FEN){
+    for(let i = 1; i < g.fens.length; i++){
+      const k = bookKey(g.fens[i]);
+      if(!book.positions.has(k)) break;
+      g.bookPly = i;
+      if(book.names[k]) g.opening = book.names[k];
+    }
+  }
+  if(g !== S) return;
+  const el = $("opening");
+  el.hidden = !g.opening;
+  if(g.opening){ const sp = g.opening.indexOf(" "); el.innerHTML = `Opening: <b>${esc(g.opening.slice(sp+1))}</b> · ${esc(g.opening.slice(0, sp))}`; }
 }
 $("bReview").onclick = review;
 

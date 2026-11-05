@@ -7,6 +7,8 @@ Upload the whole folder and keep this structure:
   games.html
   chess.js
   pieces/*.svg               (the 12 chess piece images)
+  book.json                  (opening book for "Book" moves; rebuild with
+                              node ./scripts/build-opening-book.js)
   engine/stockfish.js        (fast WebAssembly engine)
   engine/stockfish.wasm
   engine/stockfish.asm.js    (fallback for old browsers)
@@ -31,5 +33,7 @@ Licenses
 - chess.js: BSD-2 – https://github.com/jhlywa/chess.js
 - Chess pieces: Colin M.L. Burnett (cburnett set), GPLv2+ –
   https://en.wikipedia.org/wiki/User:Cburnett
+- Opening book: lichess-org/chess-openings, public domain (CC0) –
+  https://github.com/lichess-org/chess-openings
 - Sound files: supplied by the site owner. Check you have the rights to
   use them publicly.
