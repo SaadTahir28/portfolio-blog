@@ -70,6 +70,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   </div>
 
   <ul class="games" id="games"></ul>
+  <p class="status">No chess.com account? <a href="index.html" id="sampleLink">Try the sample game</a>.</p>
 </div>
 
 <script>
@@ -198,6 +199,8 @@ $("form").onsubmit = e => {
   load(user, false);
 };
 $("updateBtn").onclick = () => { $("user").value = shownUser; load(shownUser, true); };
+// with no picked game stored, index.html opens the sample game
+$("sampleLink").onclick = () => { try{ sessionStorage.removeItem(PICK_KEY); }catch(e){} };
 
 let saved = null;
 try{ saved = localStorage.getItem(USER_KEY); }catch(e){}

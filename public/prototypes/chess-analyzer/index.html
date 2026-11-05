@@ -125,11 +125,15 @@ button:disabled{opacity:.5;cursor:default}
 .sw.should{background:var(--arrow-should)}
 
 /* under the board in every layout; sticky keeps it on screen when the board is taller than the window */
-.nav{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;position:sticky;bottom:0;z-index:5;background:var(--bg);padding-block:6px max(6px, env(safe-area-inset-bottom))}
+.nav{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;position:sticky;bottom:0;z-index:5;background:var(--bg);padding-block:6px max(6px, env(safe-area-inset-bottom))}
 .nav button{font-family:var(--font-mono);padding:9px 0;font-size:1rem}
 .nav #bPlay{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .nav svg{display:block;width:1em;height:1em;margin:auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #bFull .ic-exit,.fs #bFull .ic-enter{display:none}
+/* Show: pulses while the engine works out the line */
+#bShow.busy svg{animation:show-pulse .8s ease-in-out infinite alternate}
+@keyframes show-pulse{from{opacity:.3}to{opacity:1}}
+.cur .linkbtn{font-size:.85rem;font-family:var(--font-ui)}
 .fs #bFull .ic-exit{display:block}
 /* Full screen: board, eval bar, player bars and controls only, sized to fit without scrolling.
    --fs-h = eval bar + rank strip beside the board; --fs-v = everything stacked above and below it */
@@ -153,13 +157,7 @@ kbd{font-family:var(--font-mono);font-size:.75rem;border:1px solid var(--line);b
 .mv .b{font-weight:700;font-size:.8rem}
 .mv.on .b{color:inherit!important}
 
-details.load summary{cursor:pointer;font-weight:600}
-details.load[open] summary{margin-bottom:10px}
-textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8rem;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface-2);color:var(--ink);resize:vertical}
-.loadrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
-.loadrow .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
-.err{color:var(--c-blunder);font-size:.86rem}
-@media (prefers-reduced-motion:reduce){.pc,.evalv i,.review-btn .prog{transition:none}}
+@media (prefers-reduced-motion:reduce){.pc,.evalv i,.review-btn .prog{transition:none} #bShow.busy svg{animation:none}}
 </style>
 </head>
 <body>
@@ -172,10 +170,8 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
       <button class="info" id="infoBtn" aria-expanded="false" aria-controls="howto" aria-label="How to load your own game" title="How to load your own game">i</button>
       <div class="howto" id="howto" role="dialog" aria-label="How to load your own game" hidden>
         <p><b>Analyse your own game</b></p>
-        <p>Pick from <a class="linkbtn" href="games.html">your recent chess.com games</a>, or copy a PGN:</p>
-        <p><b>Chess.com:</b> open the game → <b>Share</b> under the board → <b>PGN</b> tab → <b>Copy PGN</b>.</p>
-        <p><b>Lichess:</b> open the game → <b>Share &amp; export</b> → copy the PGN text.</p>
-        <p>Then open <button class="linkbtn" id="howLoad">Paste a PGN</button>, paste it and click <b>Load game</b>.</p>
+        <p>Open <a class="linkbtn" href="games.html">your recent chess.com games</a>, enter your username and pick a game. It opens here, ready for <b>Game Review</b>.</p>
+        <p>Or <button class="linkbtn" id="sampleLink">try the sample game</button>.</p>
       </div>
       <a class="gameslink" href="games.html">My chess.com games</a>
     </div>
@@ -184,7 +180,7 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
 
   <div class="main">
     <div class="left">
-      <div class="branchbar" id="branchBar"><span><b>Your moves</b> · <span id="branchFrom"></span> <span id="branchStatus"></span></span><button id="branchExit">✕ Back to game</button></div>
+      <div class="branchbar" id="branchBar"><span><b id="branchTitle">Your moves</b> · <span id="branchFrom"></span> <span id="branchStatus"></span></span><button id="branchExit">✕ Back to game</button></div>
       <div class="player" id="topPlayer"></div>
       <div class="boardwrap">
         <div class="evalv" id="evalv" title="Evaluation"><i id="evalFill"></i><b id="evalTxt"></b></div>
@@ -200,6 +196,7 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
         <button id="bPlay" aria-label="Play" title="Play (Space)">▶</button>
         <button id="bNext" aria-label="Next move" title="Forward (→)">→</button>
         <button id="bEnd" aria-label="Go to end" title="End (↓)">⏭</button>
+        <button id="bShow" aria-label="Show the best line" title="Show the best line (S)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6l7 6-7 6M13 6l7 6-7 6"/></svg></button>
         <button id="bFull" aria-label="Enter full screen" title="Full screen (F)"><svg class="ic-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="ic-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
       </div>
     </div>
@@ -213,7 +210,7 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
       </section>
 
       <section class="panel">
-        <div class="keys"><span><kbd>←</kbd> <kbd>→</kbd> move</span><span><kbd>↑</kbd> <kbd>↓</kbd> start / end</span><span><kbd>Space</kbd> play</span><span><kbd>F</kbd> full screen</span></div>
+        <div class="keys"><span><kbd>←</kbd> <kbd>→</kbd> move</span><span><kbd>↑</kbd> <kbd>↓</kbd> start / end</span><span><kbd>Space</kbd> play</span><span><kbd>S</kbd> best line</span><span><kbd>F</kbd> full screen</span></div>
         <div class="opts">
           <select id="speed" aria-label="Playback speed">
             <option value="1600">Slow</option>
@@ -230,15 +227,6 @@ textarea{width:100%;min-height:140px;font-family:var(--font-mono);font-size:.8re
         <h2>Moves</h2>
         <div class="moves" id="moves"></div>
       </section>
-      <details class="panel load" id="loadBox">
-        <summary>Paste a PGN</summary>
-        <textarea id="pgnInput" spellcheck="false" placeholder="Paste a PGN from Chess.com or Lichess here"></textarea>
-        <div class="loadrow">
-          <button class="primary" id="loadBtn">Load game</button>
-          <button id="sampleBtn">Sample game</button>
-          <span class="err" id="loadErr" hidden></span>
-        </div>
-      </details>
     </div>
   </div>
 
@@ -300,7 +288,7 @@ function loadGame(text){
   const p = parseGame(text); if(!p) return false;
   stopPlay(); cancelReview(); exitBranch(true);
   const n = p.fens.length;
-  S = {...p, evals:new Array(n).fill(null), second:new Array(n).fill(null), best:new Array(n).fill(null), cls:{}, reviewed:false};
+  S = {...p, evals:new Array(n).fill(null), second:new Array(n).fill(null), best:new Array(n).fill(null), lines:new Array(n).fill(null), cls:{}, reviewed:false};
   idx = 0;
   const h = p.headers;
   $("gameMeta").textContent = [text === SAMPLE ? "Sample game" : h.White && h.Black ? `${h.White} vs ${h.Black}` : null, h.TimeControl ? fmtTC(h.TimeControl) : null,
@@ -423,6 +411,7 @@ function updateUI(withHl){
   if(cur){ cur.classList.add("on"); const t = cur.offsetTop - box.offsetTop; if(t < box.scrollTop || t > box.scrollTop + box.clientHeight - 40) box.scrollTop = t - box.clientHeight/2; }
   else if(idx===0) box.scrollTop = 0;
   drawEval(); renderCur(); renderBranchBar();
+  setShowBtn();
   $("bPrev").disabled = $("bStart").disabled = cursor()===0;
   $("bNext").disabled = $("bEnd").disabled = cursor()===lastPos();
 }
@@ -458,9 +447,84 @@ function renderCur(){
   const should = shouldHavePlayed(), shouldSan = should ? uciToSan(d.fens[i-1], should) : null;
   $("cur").innerHTML = `<div class="row"><span class="pair"><span class="sw best"></span><span class="muted">Best</span> `
     + (bestNow ? `<b>${esc(bestNow)}</b>` : `<span class="muted">–</span>`) + `</span>`
-    + (shouldSan ? `<span class="pair"><span class="sw should"></span><span class="muted">Missed</span> <b>${esc(shouldSan)}</b></span>` : "")
+    + (shouldSan ? `<span class="pair"><span class="sw should"></span><span class="muted">Missed</span> <b>${esc(shouldSan)}</b> <button class="linkbtn" data-show>Show line</button></span>` : "")
     + `</div>`;
 }
+/* ---------- show best line: replays the engine's line for both sides, from the position before a mistake ---------- */
+const SHOW_PLIES = 8;   // 4 moves each
+let showTok = 0, showTimer = null, branchJob = null;
+function stopShow(){ showTok++; clearTimeout(showTimer); $("bShow").classList.remove("busy"); }
+function setShowBtn(busy){ $("bShow").classList.toggle("busy", !!busy); $("bShow").disabled = !S.fens; }
+async function searchFen(fen){
+  await startEngine();
+  if(pending){ engine.postMessage("stop"); await engineSync(); }
+  return evalPosition(fen, REVIEW_DEPTH);
+}
+// best move at position j of d, from the review / live analysis or a quick search (stored for reuse)
+async function bestAt(d, j, tok){
+  if(d.best[j]) return d.best[j];
+  const r = await searchFen(d.fens[j]);
+  if(tok !== showTok) return null;
+  if(d.evals[j] == null){ d.evals[j] = r.cp; d.second[j] = r.cp2; }
+  if(!d.best[j]) d.best[j] = r.best;
+  if(!d.lines[j]) d.lines[j] = r.line;
+  return r.best;
+}
+// the engine's line from position j, kept to its legal prefix and extended to SHOW_PLIES when shorter
+async function lineFor(d, j, tok){
+  let line = d.lines[j] || (d.best[j] ? [d.best[j]] : null);
+  if(!line){ const b = await bestAt(d, j, tok); if(tok !== showTok) return null; line = d.lines[j] || (b ? [b] : []); }
+  const c = new Chess(d.fens[j]), out = [];
+  const take = moves => { let n = 0; for(const u of moves){ if(out.length >= SHOW_PLIES || !c.move({from:u.slice(0,2), to:u.slice(2,4), promotion:u[4]})) break; out.push(u); n++; } return n; };
+  take(line);
+  while(out.length < SHOW_PLIES && !c.game_over()){
+    const r = await searchFen(c.fen());
+    if(tok !== showTok) return null;
+    if(!r.line || !take(r.line)) break;
+  }
+  return out;
+}
+async function showBestLine(){
+  if(!S.fens) return;
+  if(reviewJob){ toast("Wait for the review to finish"); return; } // playing the line needs the engine too
+  stopPlay();
+  const tok = ++showTok;
+  const done = msg => { if(tok === showTok) setShowBtn(false); if(msg && tok === showTok) toast(msg); };
+  setShowBtn(true);
+  try{
+    if(B && branchJob) await branchJob; // let the live analysis of your line finish first
+    if(tok !== showTok) return;
+    const d = D(), i = at();
+    // a move that wasn't the engine's choice: replay from the position before it
+    let j = i, instead = null;
+    if(i > 0){
+      const prev = await bestAt(d, i-1, tok);
+      if(tok !== showTok) return;
+      const m = d.hist[i-1];
+      if(prev && prev.slice(0,4) !== m.from+m.to){ j = i-1; instead = m; }
+    }
+    const line = await lineFor(d, j, tok);
+    if(tok !== showTok) return;
+    if(D() !== d || at() !== i) return done();
+    if(!line || !line.length) return done("No moves to show here");
+    done();
+    const ply = (B ? B.start : 0) + j + 1;
+    const title = instead ? `Best line instead of ${Math.ceil(ply/2)}${instead.color === "w" ? "." : "…"} ${instead.san}` : "Best line";
+    if(B) goBranch(j, false); else if(idx !== j) go(j, false);
+    let n = 0;
+    const step = () => {
+      if(tok !== showTok) return;
+      const u = line[n++];
+      playUserMove({from:u.slice(0,2), to:u.slice(2,4), promotion:u[4] || "q"});
+      if(n === 1 && B){ B.title = title; renderBranchBar(); }
+      if(n < line.length) showTimer = setTimeout(step, +$("speed").value);
+    };
+    showTimer = setTimeout(step, 450);
+  }catch(e){ done("The engine couldn't start"); }
+}
+$("bShow").onclick = showBestLine;
+$("cur").addEventListener("click", e => { if(e.target.closest("[data-show]")) showBestLine(); });
+
 /* ---------- your moves: click a piece, then a square; Stockfish analyses each new position ---------- */
 function squareAt(ev){
   const b = boardEl.getBoundingClientRect();
@@ -495,7 +559,7 @@ boardEl.addEventListener("click", ev=>{
   const c = new Chess(D().fens[at()]);
   if(sel){
     const mv = c.moves({square:sel, verbose:true}).find(m=>m.to===sq);
-    if(mv){ playUserMove({from:sel, to:sq, promotion:"q"}); return; }
+    if(mv){ if(B) B.title = null; playUserMove({from:sel, to:sq, promotion:"q"}); return; }
   }
   const p = c.get(sq);
   if(p && p.color===c.turn() && sq!==sel) selectSq(sq, c.moves({square:sq, verbose:true}));
@@ -504,14 +568,14 @@ boardEl.addEventListener("click", ev=>{
 function playUserMove(mv){
   if(!B){
     // start your line from the game position on the board, reusing its review if there is one
-    B = {start:idx, fens:[S.fens[idx]], hist:[], evals:[S.evals[idx]], second:[S.second[idx]], best:[S.best[idx]], cls:{}, k:0};
+    B = {start:idx, fens:[S.fens[idx]], hist:[], evals:[S.evals[idx]], second:[S.second[idx]], best:[S.best[idx]], lines:[S.lines[idx]], cls:{}, k:0};
     $("app").classList.add("in-branch");
   }
   // playing from an earlier point replaces the moves after it
-  B.fens.length = B.k+1; B.hist.length = B.k; B.evals.length = B.second.length = B.best.length = B.k+1;
+  B.fens.length = B.k+1; B.hist.length = B.k; B.evals.length = B.second.length = B.best.length = B.lines.length = B.k+1;
   for(const j in B.cls) if(+j > B.k) delete B.cls[j];
   const c = new Chess(B.fens[B.k]), m = c.move(mv); if(!m) return;
-  B.hist.push(m); B.fens.push(c.fen()); B.evals.push(null); B.second.push(null); B.best.push(null);
+  B.hist.push(m); B.fens.push(c.fen()); B.evals.push(null); B.second.push(null); B.best.push(null); B.lines.push(null);
   goBranch(B.k+1, true);
 }
 function goBranch(k, animate){
@@ -526,7 +590,7 @@ function goBranch(k, animate){
     B.k = k; drawPieces(B.fens[k]); updateUI(true);
   }
   // also covers stepping back onto a position whose analysis was cut short by a quick next move
-  if(B.evals[k]==null || (k>0 && B.evals[k-1]==null)) analyseBranch();
+  if(B.evals[k]==null || (k>0 && B.evals[k-1]==null)) branchJob = analyseBranch();
 }
 function exitBranch(quiet){
   if(!B) return;
@@ -537,6 +601,7 @@ function exitBranch(quiet){
 }
 function renderBranchBar(status){
   if(!B) return;
+  $("branchTitle").textContent = B.title || "Your moves";
   const m = S.hist[B.start-1];
   $("branchFrom").textContent = m ? `from ${Math.ceil(B.start/2)}${m.color==="w" ? "." : "…"} ${m.san}` : "from the start";
   if(status !== undefined) $("branchStatus").textContent = status;
@@ -553,7 +618,7 @@ async function analyseBranch(){
     if(i<0 || b.evals[i]!=null) continue;
     const r = await evalPosition(b.fens[i], REVIEW_DEPTH);
     if(tok!==liveTok) return;
-    b.evals[i] = r.cp; b.second[i] = r.cp2; b.best[i] = r.best;
+    b.evals[i] = r.cp; b.second[i] = r.cp2; b.best[i] = r.best; b.lines[i] = r.line;
     for(const j of [i, i+1]) if(j>0 && j<b.fens.length && b.evals[j-1]!=null && b.evals[j]!=null) classify(b, j);
     drawHighlights(); drawEval(); renderCur();
   }
@@ -675,6 +740,7 @@ function lastPos(){ return B ? B.hist.length : S.fens.length-1; }
 function goTo(i, animate){ B ? goBranch(i, animate) : go(i, animate); }
 function togglePlay(){ playTimer ? stopPlay() : startPlay(); }
 function startPlay(){
+  stopShow();
   if(cursor()>=lastPos()) goTo(0,false);
   const fromStart = !B && idx===0;
   if(fromStart) playStartSound();
@@ -682,7 +748,7 @@ function startPlay(){
   const tick = ()=>{ if(cursor()>=lastPos()){ stopPlay(); return; } goTo(cursor()+1, true); playTimer = setTimeout(tick, +$("speed").value); };
   playTimer = setTimeout(tick, fromStart ? 600 : 250);
 }
-function stopPlay(){ clearTimeout(playTimer); playTimer = null; $("bPlay").textContent = "▶"; $("bPlay").setAttribute("aria-label","Play"); }
+function stopPlay(){ stopShow(); clearTimeout(playTimer); playTimer = null; $("bPlay").textContent = "▶"; $("bPlay").setAttribute("aria-label","Play"); }
 
 $("bStart").onclick = ()=>{ stopPlay(); goTo(0,false); };
 $("bPrev").onclick  = ()=>{ stopPlay(); goTo(cursor()-1,false); };
@@ -703,20 +769,17 @@ document.addEventListener("keydown", e=>{
   else if(k==="Escape" && (B || sel)){ e.preventDefault(); B ? exitBranch() : clearSel(); }
   else if(k==="Escape" && isFull() && !document.fullscreenElement){ e.preventDefault(); toggleFull(); } // windowed fallback has no browser Esc
   else if(k==="f" || k==="F"){ e.preventDefault(); toggleFull(); }
+  else if(k==="s" || k==="S"){ e.preventDefault(); showBestLine(); }
   else if(k===" " && e.target.tagName!=="BUTTON"){ e.preventDefault(); togglePlay(); }
 });
 // keep keyboard focus on the page so the arrow keys work right after clicking the board
 boardEl.addEventListener("pointerdown", ()=>$("app").focus({preventScroll:true}));
 
 /* ---------- load ---------- */
-$("loadBtn").onclick = ()=>{
-  const t = $("pgnInput").value, err = $("loadErr");
-  if(!t.trim()){ err.textContent = "Paste a PGN first."; err.hidden = false; return; }
-  if(loadGame(t)){ clearPicked(); err.hidden = true; $("loadBox").open = false; playStartSound(); }
-  else { err.textContent = "That PGN couldn't be read. Copy the full text from the site's PGN tab, including the moves."; err.hidden = false; }
+$("sampleLink").onclick = ()=>{
+  showHowto(false); clearPicked();
+  flipped = false; drawSquares(); loadGame(SAMPLE); playStartSound();
 };
-$("sampleBtn").onclick = ()=>{ clearPicked(); loadGame(SAMPLE); $("loadErr").hidden = true; $("loadBox").open = false; playStartSound(); };
-$("howLoad").onclick = ()=>{ showHowto(false); $("loadBox").open = true; $("loadBox").scrollIntoView({block:"center"}); $("pgnInput").focus({preventScroll:true}); };
 function showHowto(open){ $("howto").hidden = !open; $("infoBtn").setAttribute("aria-expanded", open); }
 $("infoBtn").onclick = ()=>showHowto($("howto").hidden);
 // a click outside the card only closes it, so it can't also select a piece on the board
@@ -765,12 +828,12 @@ function onEngine(ev){
   if(line.startsWith("info") && line.includes(" score ") && !line.includes("lowerbound") && !line.includes("upperbound")){
     const mp = +((line.match(/ multipv (\d+)/) || [])[1] || 1);
     const sc = parseScore(line); if(sc == null) return;
-    if(mp === 1){ pending.score = sc; const pv = line.match(/ pv (\S+)/); if(pv) pending.pv = pv[1]; }
+    if(mp === 1){ pending.score = sc; const pv = line.split(" pv ")[1]; if(pv){ pending.line = pv.trim().split(/\s+/); pending.pv = pending.line[0]; } }
     else if(mp === 2) pending.score2 = sc;
   } else if(line.startsWith("bestmove")){
     const p = pending; pending = null;
     const bm = line.split(" ")[1];
-    p.done(p.score, p.score2, bm && bm !== "(none)" ? bm : p.pv);
+    p.done(p.score, p.score2, bm && bm !== "(none)" ? bm : p.pv, p.line);
   }
 }
 function engineSync(){ return new Promise(r => { syncRes = r; engine.postMessage("isready"); }); }
@@ -780,7 +843,8 @@ function evalPosition(fen, depth){
     const stm = fen.split(" ")[1] === "w" ? 1 : -1;
     if(c.in_checkmate()) return res({cp:-stm*10000, cp2:null, best:null});
     if(c.in_draw() || c.in_stalemate()) return res({cp:0, cp2:null, best:null});
-    pending = {score:0, score2:null, pv:null, done:(sc, sc2, bm)=>res({cp:stm*sc, cp2: sc2==null ? null : stm*sc2, best:bm})};
+    pending = {score:0, score2:null, pv:null, line:null, done:(sc, sc2, bm, line)=>res({cp:stm*sc, cp2: sc2==null ? null : stm*sc2, best:bm,
+      line: line && bm && line[0] === bm ? line : (bm ? [bm] : null)})};
     engine.postMessage("position fen " + fen);
     engine.postMessage("go depth " + depth);
   });
@@ -805,7 +869,7 @@ async function review(){
     if(my.cancelled) return;
     const r = await evalPosition(S.fens[i], REVIEW_DEPTH);
     if(my.cancelled) return;
-    S.evals[i] = r.cp; S.second[i] = r.cp2; S.best[i] = r.best;
+    S.evals[i] = r.cp; S.second[i] = r.cp2; S.best[i] = r.best; S.lines[i] = r.line;
     if(i>0){ classify(S, i); setBadge(i); }
     const pct = Math.round((i+1)/n*100);
     setReviewBtn(`Reviewing… ${pct}%`, pct, true);

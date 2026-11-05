@@ -4,7 +4,7 @@ const vibeCodingData = [
   {
     title: 'Stockfish Chess Analysis | Playable Prototype',
     description:
-      'A browser chess analysis board powered by Stockfish, built with HTML5 and JavaScript. Pick a recent game from a chess.com username or paste a PGN, then run a game review that flags best moves, inaccuracies, mistakes and blunders with an eval bar and arrows, and try your own moves with live analysis. Hit the play button to run it right in your browser.',
+      'A browser chess analysis board powered by Stockfish, built with HTML5 and JavaScript. Pick a recent game from a chess.com username, then run a game review that flags best moves, inaccuracies, mistakes and blunders with an eval bar and arrows, try your own moves with live analysis, and press Show on a mistake to watch the engine's better line play out for both sides. Hit the play button to run it right in your browser.',
     imgSrc: '/static/images/projectCards/chess_board_analyzer.png',
     play: '/prototypes/chess-analyzer/index.html',
     tools: ['HTML5', 'JavaScript', 'Stockfish', 'WebAssembly', 'Chess', 'Prototype', 'Web'],
